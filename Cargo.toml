@@ -8,6 +8,5 @@ name = "mmr_elites_rs"
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = { version = "0.20", features = ["extension-module"] }
-numpy = "0.20"
-ndarray = "0.15"  # Standard Rust tensor library
+pyo3 = { version = "0.23", features = ["extension-module"] }
+numpy = "0.23"

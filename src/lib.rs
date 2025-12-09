@@ -1,10 +1,9 @@
 use pyo3::prelude::*;
-use numpy::{PyReadonlyArray1, PyReadonlyArray2, PyArray1};
-use ndarray::{ArrayView1, ArrayView2};
+use numpy::{PyReadonlyArray1, PyReadonlyArray2, PyArray1, IntoPyArray, ndarray::{ArrayView1, ArrayView2}};
 use std::collections::BinaryHeap;
 use std::cmp::Ordering;
 
-// --- Float Wrapper for Heap (Same as before) ---
+// --- Float Wrapper for Heap ---
 #[derive(Debug, Clone, Copy, PartialEq)]
 struct Float(f64);
 
@@ -64,7 +63,7 @@ impl MMRSelector {
         py: Python<'py>,
         fitness: PyReadonlyArray1<f64>,
         descriptors: PyReadonlyArray2<f64>,
-    ) -> PyResult<&'py PyArray1<usize>> {
+    ) -> PyResult<Bound<'py, PyArray1<usize>>> {
         
         // 1. Convert to Rust Views (Zero Copy)
         let fit_view = fitness.as_array();
@@ -82,6 +81,7 @@ impl MMRSelector {
         let selected_indices = self.run_lazy_greedy(fit_view, desc_view);
 
         // 4. Return as Numpy Array
+        // PyArray1::from_vec returns a Bound<'py, ...> in newer numpy/pyo3 versions
         Ok(PyArray1::from_vec(py, selected_indices))
     }
 }
@@ -140,7 +140,7 @@ impl MMRSelector {
 
         // 3. Lazy Greedy Loop
         while selected_indices.len() < self.target_k {
-            if let Some(mut top) = pq.pop() {
+            if let Some(top) = pq.pop() {
                 let cand_idx = top.index;
                 
                 // LAZY CHECK
@@ -186,7 +186,59 @@ impl MMRSelector {
 
 /// The module definition
 #[pymodule]
-fn mmr_elites_rs(_py: Python, m: &PyModule) -> PyResult<()> {
+fn mmr_elites_rs(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<MMRSelector>()?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use numpy::ndarray::{arr1, arr2};
+
+    #[test]
+    fn test_small_basic_case() {
+        let selector = MMRSelector::new(2, 0.5);
+        
+        let fitness = arr1(&[1.0, 0.5, 0.5]);
+        let descriptors = arr2(&[
+            [0.0, 0.0],
+            [0.1, 0.0],
+            [10.0, 0.0]
+        ]);
+
+        let indices = selector.run_lazy_greedy(fitness.view(), descriptors.view());
+        
+        assert_eq!(indices.len(), 2);
+        assert_eq!(indices[0], 0); // First is always best fitness
+        assert_eq!(indices[1], 2); // Second should be the far one
+    }
+
+    #[test]
+    fn test_n_less_than_k() {
+        let selector = MMRSelector::new(10, 0.5);
+        let fitness = arr1(&[1.0, 2.0, 3.0]);
+        let descriptors = arr2(&[
+            [0.0], [1.0], [2.0]
+        ]);
+
+        let indices = selector.run_lazy_greedy(fitness.view(), descriptors.view());
+        assert_eq!(indices.len(), 3); // Should return all
+    }
+
+    #[test]
+    fn test_identical_descriptors() {
+        let selector = MMRSelector::new(3, 0.5);
+        let fitness = arr1(&[10.0, 8.0, 9.0, 5.0]);
+        let descriptors = arr2(&[
+            [0.0], [0.0], [0.0], [0.0]
+        ]);
+
+        let indices = selector.run_lazy_greedy(fitness.view(), descriptors.view());
+        
+        // Should pick best fitnesses since diversity is 0 for all
+        // Order: 10.0 -> 9.0 -> 8.0 -> ...
+        // Indices: 0, 2, 1
+        assert_eq!(indices, vec![0, 2, 1]);
+    }
 }

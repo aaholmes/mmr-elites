@@ -23,8 +23,8 @@ Handles logging, visualization (Coverage metrics, QD-Score), and JAX integration
 ## Component StatusComponent   Sub-Module     Status    Notes
 ---         ---            ---       ---
 ### Core Algorithm
-LazyGreedy Selector🟡 DesignedLogic defined; needs unit tests for corner cases.
-BinaryHeap Optimization🟡 DesignedImplemented in design doc; needs integration.
+LazyGreedy Selector🟢 ImplementedLogic verified with unit tests (basic + corner cases).
+BinaryHeap Optimization🟢 ImplementedFully integrated into selection loop.
 
 ### Rust Binding
 PyO3 Interface🟡 DesignedZero-copy ndarray views prototyped.
@@ -64,9 +64,9 @@ survivors = selector.select(fitness_array, descriptor_array)
 ## Roadmap & TimelineTotal Estimated Effort: 16 - 24 Hours
 
 Phase 1: The Engine (Days 1-2)
-- [ ] Initialize Repo: Set up git, cargo, and pyproject.toml.
-- [ ] Implement Rust Core: Port the LazyGreedy logic from design doc to src/lib.rs.
-- [ ] Unit Testing: Verify LazyGreedy returns identical subsets to Brute Force for small $N$.
+- [x] Initialize Repo: Set up git, cargo, and pyproject.toml.
+- [x] Implement Rust Core: Port the LazyGreedy logic from design doc to src/lib.rs.
+- [x] Unit Testing: Verify LazyGreedy returns identical subsets to Brute Force for small $N$.
 - [ ] Bind: Verify numpy to ndarray zero-copy passing works without segfaults.
 
 Phase 2: The Benchmark (Days 3-4)
