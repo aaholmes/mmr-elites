@@ -1,5 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from typing import Tuple
+from ..task import Task
 
 class Arm20DOF(Task):
     def __init__(self, target_pos: Tuple[float, float] = (10.0, 10.0)):

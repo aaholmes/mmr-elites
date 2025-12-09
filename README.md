@@ -9,7 +9,7 @@ This repository contains the high-performance implementation, featuring a Rust b
 ## Architecture
 The system is designed as a hybrid Rust/Python application to balance compute efficiency with experimental flexibility.
 
-mmr_rs (Rust Core):
+mmr_elites_rs (Rust Core):
 Handles the heavy lifting of archive maintenance.
 Implements Lazy Greedy Selection using Priority Queues to maximize $Score = (1-\lambda) \cdot Fitness + \lambda \cdot d_{min}$.
 Zero-Copy data transfer via PyO3 and numpy (Rust crate).
@@ -45,16 +45,16 @@ QD-Score Plots🔴 PendingStandard logging harness needed.
 maturin develop --release
 
 # 2. Run the Benchmark
-python scripts/run_arm20_benchmark.py
+python scripts/run_benchmark.py
 ```
 Minimal Example:
 
 ```python
-import mmr_rs
+import mmr_elites_rs
 import numpy as np
 
 # Initialize Selector (K=1000 elites, Lambda=0.5)
-selector = mmr_rs.MuseSelector(1000, 0.5)
+selector = mmr_elites_rs.MMRSelector(1000, 0.5)
 
 # Survival Step (Zero-Copy)
 # fitness: (N,), descriptors: (N, 20)

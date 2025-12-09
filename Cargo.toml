@@ -1,10 +1,10 @@
 [package]
-name = "muse_rs"
+name = "mmr_elites_rs"
 version = "0.1.0"
 edition = "2021"
 
 [lib]
-name = "muse_rs"
+name = "mmr_elites_rs"
 crate-type = ["cdylib"]
 
 [dependencies]

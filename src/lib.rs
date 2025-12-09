@@ -1,6 +1,6 @@
 use pyo3::prelude::*;
-use numpy::{PyReadonlyArray1, PyReadonlyArray2, PyArray1, ToPyArray};
-use ndarray::{ArrayView1, ArrayView2, Axis};
+use numpy::{PyReadonlyArray1, PyReadonlyArray2, PyArray1};
+use ndarray::{ArrayView1, ArrayView2};
 use std::collections::BinaryHeap;
 use std::cmp::Ordering;
 
@@ -23,7 +23,6 @@ impl Ord for Float {
 }
 
 // --- Candidate Struct for Heap ---
-// Note: We no longer store the descriptor data here. Just the index.
 #[derive(PartialEq, Eq)]
 struct Candidate {
     index: usize,
@@ -44,16 +43,16 @@ impl PartialOrd for Candidate {
 
 // --- The Python Class ---
 #[pyclass]
-struct MuseSelector {
+struct MMRSelector {
     target_k: usize,
     lambda: f64,
 }
 
 #[pymethods]
-impl MuseSelector {
+impl MMRSelector {
     #[new]
     fn new(target_k: usize, lambda: f64) -> Self {
-        MuseSelector { target_k, lambda }
+        MMRSelector { target_k, lambda }
     }
 
     /// The Zero-Copy Selection Interface
@@ -68,7 +67,6 @@ impl MuseSelector {
     ) -> PyResult<&'py PyArray1<usize>> {
         
         // 1. Convert to Rust Views (Zero Copy)
-        // These are safe slices into Python memory.
         let fit_view = fitness.as_array();
         let desc_view = descriptors.as_array();
 
@@ -81,7 +79,6 @@ impl MuseSelector {
         }
 
         // 3. Execute Pure Rust Logic
-        // We delegate to a pure Rust function to keep the pyo3 logic clean
         let selected_indices = self.run_lazy_greedy(fit_view, desc_view);
 
         // 4. Return as Numpy Array
@@ -89,7 +86,7 @@ impl MuseSelector {
     }
 }
 
-impl MuseSelector {
+impl MMRSelector {
     /// Internal Pure Rust implementation working on ndarray Views
     fn run_lazy_greedy(
         &self, 
@@ -102,11 +99,9 @@ impl MuseSelector {
         }
 
         let mut selected_indices = Vec::with_capacity(self.target_k);
-        // We store indices of selected items to lookup their descriptors later
         let mut archive_indices: Vec<usize> = Vec::with_capacity(self.target_k);
 
         // 1. Seed with Best Fitness
-        // Helper to find argmax without dealing with NaNs
         let mut best_idx = 0;
         let mut max_fit = f64::NEG_INFINITY;
         
@@ -122,8 +117,6 @@ impl MuseSelector {
 
         // 2. Initialize Priority Queue
         let mut pq = BinaryHeap::new();
-        
-        // Pre-fetch the descriptor of the seed to compute initial distances
         let seed_desc = descriptors.row(best_idx);
 
         for i in 0..n {
@@ -132,7 +125,6 @@ impl MuseSelector {
             let current_desc = descriptors.row(i);
             
             // Initial distance is strictly to the seed
-            // Optimizing Euclidean dist using ndarray
             let d = (&current_desc - &seed_desc)
                 .mapv(|x| x.powi(2))
                 .sum()
@@ -152,17 +144,11 @@ impl MuseSelector {
                 let cand_idx = top.index;
                 
                 // LAZY CHECK
-                // Recalculate d_min against the ENTIRE current archive.
-                // Note: In production code, you can optimize this further by storing 
-                // the 'last_d_min' for each candidate and only checking against 
-                // newly added elites. For now, we scan the archive (Size K).
-                
                 let cand_desc = descriptors.row(cand_idx);
                 let mut current_d_min = f64::INFINITY;
 
                 for &archived_idx in &archive_indices {
                     let archive_desc = descriptors.row(archived_idx);
-                    // dist calculation
                     let d = (&cand_desc - &archive_desc)
                         .mapv(|x| x.powi(2))
                         .sum()
@@ -183,7 +169,7 @@ impl MuseSelector {
                     selected_indices.push(cand_idx);
                     archive_indices.push(cand_idx);
                 } else {
-                    // Rejected (for now), push back with updated score
+                    // Rejected
                     pq.push(Candidate {
                         index: cand_idx,
                         mmr_score: Float(new_score),
@@ -196,4 +182,11 @@ impl MuseSelector {
 
         selected_indices
     }
+}
+
+/// The module definition
+#[pymodule]
+fn mmr_elites_rs(_py: Python, m: &PyModule) -> PyResult<()> {
+    m.add_class::<MMRSelector>()?;
+    Ok(())
 }
