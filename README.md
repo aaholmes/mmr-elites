@@ -67,7 +67,7 @@ Phase 1: The Engine (Days 1-2)
 - [x] Initialize Repo: Set up git, cargo, and pyproject.toml.
 - [x] Implement Rust Core: Port the LazyGreedy logic from design doc to src/lib.rs.
 - [x] Unit Testing: Verify LazyGreedy returns identical subsets to Brute Force for small $N$.
-- [ ] Bind: Verify numpy to ndarray zero-copy passing works without segfaults.
+- [x] Bind: Verify numpy to ndarray zero-copy passing works without segfaults.
 
 Phase 2: The Benchmark (Days 3-4)
 - [ ] Implement Arm20: Create the 20-DOF Arm task with redundant solutions.

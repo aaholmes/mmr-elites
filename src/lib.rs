@@ -44,14 +44,14 @@ impl PartialOrd for Candidate {
 #[pyclass]
 struct MMRSelector {
     target_k: usize,
-    lambda: f64,
+    lambda_val: f64,
 }
 
 #[pymethods]
 impl MMRSelector {
     #[new]
-    fn new(target_k: usize, lambda: f64) -> Self {
-        MMRSelector { target_k, lambda }
+    fn new(target_k: usize, lambda_val: f64) -> Self {
+        MMRSelector { target_k, lambda_val }
     }
 
     /// The Zero-Copy Selection Interface
@@ -130,7 +130,7 @@ impl MMRSelector {
                 .sum()
                 .sqrt();
 
-            let score = (1.0 - self.lambda) * fitness[i] + self.lambda * d;
+            let score = (1.0 - self.lambda_val) * fitness[i] + self.lambda_val * d;
             
             pq.push(Candidate {
                 index: i,
@@ -159,7 +159,7 @@ impl MMRSelector {
                     }
                 }
 
-                let new_score = (1.0 - self.lambda) * fitness[cand_idx] + self.lambda * current_d_min;
+                let new_score = (1.0 - self.lambda_val) * fitness[cand_idx] + self.lambda_val * current_d_min;
 
                 // Peek next best
                 let threshold = pq.peek().map(|c| c.mmr_score.0).unwrap_or(f64::NEG_INFINITY);
