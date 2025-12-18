@@ -6,6 +6,14 @@ MMR-Elites (Maximal Marginal Relevance Elites) is a Quality-Diversity (QD) optim
 Where standard methods like MAP-Elites rely on discrete grids—which scale exponentially ($O(\text{bins}^D)$) and fail for $D \gtrsim 10$—MMR-Elites maintains a fixed-size unstructured archive of $K$ individuals. It treats the survival step as a Subset Selection Problem, using a Lazy Greedy optimization of the Maximal Marginal Relevance (MMR) metric to ensure uniform coverage of the behavior manifold without grid artifacts.
 This repository contains the high-performance implementation, featuring a Rust backend for $O(K \log K)$ selection survival and a Python frontend for flexible task definition.
 
+## Tentative paper title and abstract
+
+### Title
+MUSE-QD: Breaking the Curse of Dimensionality in Quality-Diversity via Lazy Greedy Subset Selection
+
+### Abstract
+Quality-Diversity (QD) algorithms, such as MAP-Elites, have emerged as a powerful paradigm for generating diverse repertoires of robot behaviors. However, standard QD methods rely on structured archives (grids) that suffer from the "curse of dimensionality," rendering them computationally intractable for high-dimensional behavior spaces ($D > 10$). We introduce MUSE-QD (Maximal Unstructured Selection of Elites), a grid-free evolutionary algorithm that maintains a fixed-memory unstructured archive via a rigorous subset selection objective. By reformulating the survival step as a Maximal Marginal Relevance (MMR) optimization problem, MUSE-QD explicitly maximizes the joint distribution of fitness and behavioral coverage without geometric priors. We propose a Lazy Greedy implementation backed by a high-performance Rust runtime, reducing the selection complexity from cubic to near-linear time. We demonstrate that MUSE-QD outperforms MAP-Elites and unstructured baselines on a 20-DOF planar arm task, achieving superior coverage and memory efficiency while eliminating the need for hyperparameter-sensitive grid resolutions or novelty thresholds.
+
 ## Architecture
 The system is designed as a hybrid Rust/Python application to balance compute efficiency with experimental flexibility.
 
