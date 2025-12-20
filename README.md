@@ -31,20 +31,21 @@ Handles logging, visualization (Coverage metrics, QD-Score), and JAX integration
 ## Component StatusComponent   Sub-Module     Status    Notes
 ---         ---            ---       ---
 ### Core Algorithm
-LazyGreedy Selector🟢 ImplementedLogic verified with unit tests (basic + corner cases).
-BinaryHeap Optimization🟢 ImplementedFully integrated into selection loop.
+LazyGreedy Selector🟢 ImplementedRust backend with BinaryHeap optimization.
+BinaryHeap Optimization🟢 ImplementedFully integrated.
 
 ### Rust Binding
-PyO3 Interface🟢 ImplementedZero-copy ndarray views prototyped.
-Cargo Configuration🟢 Readymaturin build specs defined.
+PyO3 Interface🟢 ImplementedZero-copy ndarray views working.
+Cargo Configuration🟢 ReadyBuilds with `maturin develop --release`.
 
 ### Benchmarks
-Arm20DOF (Forward Kinematics)🟢 ImplementedKinematics & Evaluation logic ready.
-Standard MAP-Elites🔴 PendingSparse dictionary implementation needed for baseline.
+Arm20DOF (Task)🟢 ImplementedIncludes Forward Kinematics & Wall Collision ("The Trap").
+Performance Benchmarks🟢 Implemented`benchmark.py` and `stress_test.py` confirm >100x speedup.
+Standard MAP-Elites🔴 PendingNeeded for quality comparison (Phase 3).
 
 ### Visualization
-Coverage Metrics🔴 PendingNeed definition for "Continuous Coverage".
-QD-Score Plots🔴 PendingStandard logging harness needed.
+Coverage Metrics🟡 Partial`plot_results.py` generates archive plots, but no comparative metrics yet.
+QD-Score Plots🔴 PendingNeed standardized history logger for both algorithms.
 
 ## Installation & UsagePrerequisites: Rust (cargo), Python 3.10+, maturin.
 
@@ -52,8 +53,11 @@ QD-Score Plots🔴 PendingStandard logging harness needed.
 # 1. Compile the Rust backend
 maturin develop --release
 
-# 2. Run the Benchmark
-python scripts/run_benchmark.py
+# 2. Run the Benchmark (Performance)
+python benchmark.py
+
+# 3. Run the Experiment (Arm20 Task)
+python experiment.py
 ```
 Minimal Example:
 
@@ -74,13 +78,14 @@ survivors = selector.select(fitness_array, descriptor_array)
 Phase 1: The Engine (Days 1-2)
 - [x] Initialize Repo: Set up git, cargo, and pyproject.toml.
 - [x] Implement Rust Core: Port the LazyGreedy logic from design doc to src/lib.rs.
-- [x] Unit Testing: Verify LazyGreedy returns identical subsets to Brute Force for small $N$.
+- [x] Unit Testing: Verify LazyGreedy returns identical subsets to Brute Force (`scripts/test_correctness.py`).
 - [x] Bind: Verify numpy to ndarray zero-copy passing works without segfaults.
 
 Phase 2: The Benchmark (Days 3-4)
-- [ ] Implement Arm20: Create the 20-DOF Arm task with redundant solutions.
+- [x] Implement Arm20: `tasks/arm_20.py` implements FK and Obstacle Avoidance.
+- [x] Performance Tests: `stress_test.py` validates O(N log N) scaling.
 - [ ] Implement Baseline: Code a "Sparse MAP-Elites" (using a hash map) to compare against.
-- [ ] Data Pipeline: Create a standardized History logger for reproduction.
+- [x] Data Pipeline: `experiment.py` saves snapshots to `muse_results.pkl`.
 
 Phase 3: Analysis & Polish (Day 5)
 - [ ] Metric: Coverage: Implement a "Union of Hyperspheres" or "k-NN" metric to quantify coverage in 20D.
