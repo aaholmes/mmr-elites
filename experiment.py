@@ -14,7 +14,7 @@ SIGMA = 0.1
 
 def main():
     np.random.seed(SEED)
-    print(f"🚀 LAUNCHING MUSE-QD: HIGH-RES START RUN (Seed={SEED})")
+    print(f"🚀 LAUNCHING MUSE-QD: FULL POSE DATA RUN (Seed={SEED})")
     
     task = Arm20Task()
     selector = mmr_elites_rs.MMRSelector(ARCHIVE_SIZE, LAMBDA)
@@ -28,7 +28,8 @@ def main():
     desc = desc[indices]
     
     history = {"gen": [], "max_fit": []}
-    tips_snapshots = {} 
+    # snapshots: stores (Genomes, Fitness) so we can reconstruct everything
+    snapshots = {} 
     
     start_time = time.time()
     
@@ -48,10 +49,14 @@ def main():
         
         max_f = np.max(fit)
         
-        # --- LOGGING LOGIC UPDATE ---
-        # Save if: First 10 gens OR Every 10 gens thereafter
-        if gen <= 10 or gen % 10 == 0:
-            tips_snapshots[gen] = desc.copy()
+        # LOGGING
+        # Save detailed snapshots for Gen 1-10, then every 20
+        if gen <= 10 or gen % 20 == 0:
+            snapshots[gen] = {
+                "genomes": archive.copy(),
+                "fitness": fit.copy(),
+                "tips": desc.copy()
+            }
             history["gen"].append(gen)
             history["max_fit"].append(max_f)
             
@@ -66,8 +71,7 @@ def main():
     
     data = {
         "history": history,
-        "snapshots": tips_snapshots,
-        "final_tips": desc
+        "snapshots": snapshots,
     }
     with open("muse_results.pkl", "wb") as f:
         pickle.dump(data, f)
