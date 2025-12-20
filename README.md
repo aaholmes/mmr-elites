@@ -35,11 +35,11 @@ LazyGreedy Selector🟢 ImplementedLogic verified with unit tests (basic + corne
 BinaryHeap Optimization🟢 ImplementedFully integrated into selection loop.
 
 ### Rust Binding
-PyO3 Interface🟡 DesignedZero-copy ndarray views prototyped.
+PyO3 Interface🟢 ImplementedZero-copy ndarray views prototyped.
 Cargo Configuration🟢 Readymaturin build specs defined.
 
 ### Benchmarks
-Arm20DOF (Forward Kinematics)🟡 DesignedPython prototype ready; moving to JAX for speed?
+Arm20DOF (Forward Kinematics)🟢 ImplementedKinematics & Evaluation logic ready.
 Standard MAP-Elites🔴 PendingSparse dictionary implementation needed for baseline.
 
 ### Visualization
