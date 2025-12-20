@@ -88,4 +88,4 @@ class Arm20Task:
 
     def get_descriptor(self, genomes):
         _, tips = self.evaluate(genomes)
-        return tips 
+        return joint_coords.reshape(batch_size, -1) 
