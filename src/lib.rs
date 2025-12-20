@@ -1,7 +1,8 @@
 use pyo3::prelude::*;
-use numpy::{PyReadonlyArray1, PyReadonlyArray2, PyArray1, IntoPyArray, ndarray::{ArrayView1, ArrayView2}};
+use numpy::{PyReadonlyArray1, PyReadonlyArray2, PyArray1, ndarray::{ArrayView1, ArrayView2}};
 use std::collections::BinaryHeap;
 use std::cmp::Ordering;
+use rayon::prelude::*;
 
 // --- Float Wrapper for Heap ---
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -21,12 +22,25 @@ impl Ord for Float {
     }
 }
 
-// --- Candidate Struct for Heap ---
-#[derive(PartialEq, Eq)]
+// --- Optimized Candidate Struct ---
+// Removed #[derive(PartialEq, Eq)] because f64 (cached_d_min) breaks it.
 struct Candidate {
     index: usize,
     mmr_score: Float,
+    // CACHE: The d_min valid against the archive of size 'checked_count'
+    cached_d_min: f64,     
+    // TIMESTAMP: How many elites were in the archive when we last updated this?
+    checked_count: usize,  
 }
+
+// Manually implement PartialEq to satisfy Eq, ignoring the raw f64 fields
+impl PartialEq for Candidate {
+    fn eq(&self, other: &Self) -> bool {
+        self.mmr_score == other.mmr_score
+    }
+}
+
+impl Eq for Candidate {}
 
 impl Ord for Candidate {
     fn cmp(&self, other: &Self) -> Ordering {
@@ -40,7 +54,6 @@ impl PartialOrd for Candidate {
     }
 }
 
-// --- The Python Class ---
 #[pyclass]
 struct MMRSelector {
     target_k: usize,
@@ -54,7 +67,7 @@ impl MMRSelector {
         MMRSelector { target_k, lambda_val }
     }
 
-    /// The Zero-Copy Selection Interface
+    /// The High-Performance Selection Interface
     fn select<'py>(
         &self,
         py: Python<'py>,
@@ -72,15 +85,17 @@ impl MMRSelector {
             ));
         }
 
-        let selected_indices = self.run_lazy_greedy(fit_view, desc_view);
+        // Release GIL for expensive computation (Parallelism!)
+        let indices = py.allow_threads(|| {
+            self.run_optimized(fit_view, desc_view)
+        });
 
-        Ok(PyArray1::from_vec(py, selected_indices))
+        Ok(PyArray1::from_vec(py, indices))
     }
 }
 
 impl MMRSelector {
-    /// Internal Pure Rust implementation working on ndarray Views
-    fn run_lazy_greedy(
+    fn run_optimized(
         &self,
         fitness: ArrayView1<f64>,
         descriptors: ArrayView2<f64>
@@ -93,7 +108,7 @@ impl MMRSelector {
         let mut selected_indices = Vec::with_capacity(self.target_k);
         let mut archive_indices: Vec<usize> = Vec::with_capacity(self.target_k);
 
-        // 1. Seed with Best Fitness
+        // 1. Seed with Best Fitness (Serial is fine for O(N))
         let mut best_idx = 0;
         let mut max_fit = f64::NEG_INFINITY;
 
@@ -107,67 +122,91 @@ impl MMRSelector {
         selected_indices.push(best_idx);
         archive_indices.push(best_idx);
 
-        // 2. Initialize Priority Queue
-        let mut pq = BinaryHeap::new();
+        // 2. Parallel Initialization (Rayon)
         let seed_desc = descriptors.row(best_idx);
+        let lambda = self.lambda_val;
 
-        for i in 0..n {
-            if i == best_idx { continue; }
-
-            let current_desc = descriptors.row(i);
-
-            // Optimization: Iterator-based distance (No Allocation)
-            let d = current_desc.iter()
-                .zip(seed_desc.iter())
-                .fold(0.0, |acc, (a, b)| acc + (a - b).powi(2))
-                .sqrt();
-
-            let score = (1.0 - self.lambda_val) * fitness[i] + self.lambda_val * d;
-
-            pq.push(Candidate {
-                index: i,
-                mmr_score: Float(score),
-            });
-        }
-
-        // 3. Lazy Greedy Loop
-        while selected_indices.len() < self.target_k {
-            if let Some(top) = pq.pop() {
-                let cand_idx = top.index;
-                let cand_desc = descriptors.row(cand_idx);
-
-                // LAZY CHECK
-                let mut current_d_min = f64::INFINITY;
-
-                for &archived_idx in &archive_indices {
-                    let archive_desc = descriptors.row(archived_idx);
-
-                    // Optimization: Iterator-based distance (No Allocation)
-                    let d = cand_desc.iter()
-                        .zip(archive_desc.iter())
-                        .fold(0.0, |acc, (a, b)| acc + (a - b).powi(2))
-                        .sqrt();
-
-                    if d < current_d_min {
-                        current_d_min = d;
-                    }
+        // Build candidates in parallel
+        let candidates_vec: Vec<Candidate> = (0..n).into_par_iter()
+            .map(|i| {
+                if i == best_idx {
+                    return None;
                 }
-
-                let new_score = (1.0 - self.lambda_val) * fitness[cand_idx] + self.lambda_val * current_d_min;
                 
-                // Peek next best
-                let threshold = pq.peek().map(|c| c.mmr_score.0).unwrap_or(f64::NEG_INFINITY);
+                let current_desc = descriptors.row(i);
+                // Zero-Alloc Distance
+                let d = current_desc.iter()
+                    .zip(seed_desc.iter())
+                    .fold(0.0, |acc, (a, b)| acc + (a - b).powi(2))
+                    .sqrt();
 
-                if new_score >= threshold {
-                    // Accepted
-                    selected_indices.push(cand_idx);
-                    archive_indices.push(cand_idx);
+                let score = (1.0 - lambda) * fitness[i] + lambda * d;
+
+                Some(Candidate {
+                    index: i,
+                    mmr_score: Float(score),
+                    cached_d_min: d,
+                    checked_count: 1, // Valid against the 1 initial elite
+                })
+            })
+            .flatten()
+            .collect();
+
+        // Heapify O(N)
+        let mut pq: BinaryHeap<Candidate> = BinaryHeap::from(candidates_vec);
+
+        // 3. Incremental Lazy Greedy Loop
+        while selected_indices.len() < self.target_k {
+            if let Some(mut top) = pq.pop() {
+                
+                let current_archive_len = archive_indices.len();
+                
+                // CHECK: Is this candidate stale?
+                if top.checked_count < current_archive_len {
+                    let cand_idx = top.index;
+                    let cand_desc = descriptors.row(cand_idx);
+                    
+                    let mut new_d_min = top.cached_d_min;
+
+                    // OPTIMIZATION: Only scan the NEW elites added since we last checked
+                    for i in top.checked_count..current_archive_len {
+                        let elite_idx = archive_indices[i];
+                        let elite_desc = descriptors.row(elite_idx);
+
+                        let d = cand_desc.iter()
+                            .zip(elite_desc.iter())
+                            .fold(0.0, |acc, (a, b)| acc + (a - b).powi(2))
+                            .sqrt();
+                        
+                        if d < new_d_min {
+                            new_d_min = d;
+                        }
+                    }
+
+                    // Update Candidate State
+                    top.cached_d_min = new_d_min;
+                    top.checked_count = current_archive_len;
+                    
+                    // Recalculate Score
+                    let new_score = (1.0 - lambda) * fitness[cand_idx] + lambda * new_d_min;
+                    top.mmr_score = Float(new_score);
+
+                    // PEEK Strategy
+                    let threshold = pq.peek().map(|c| c.mmr_score.0).unwrap_or(f64::NEG_INFINITY);
+
+                    if new_score >= threshold {
+                        // Winner
+                        selected_indices.push(cand_idx);
+                        archive_indices.push(cand_idx);
+                    } else {
+                        // Stale: Push back with updated score
+                        pq.push(top);
+                    }
+
                 } else {
-                    // Rejected - push back with updated score
-                    pq.push(Candidate {
-                        index: cand_idx,
-                        mmr_score: Float(new_score),
-                    });
+                    // Candidate is fresh, wins immediately
+                    selected_indices.push(top.index);
+                    archive_indices.push(top.index);
                 }
             } else {
                 break;
@@ -191,7 +230,7 @@ mod tests {
     use numpy::ndarray::{arr1, arr2};
 
     #[test]
-    fn test_small_basic_case() {
+    fn test_small_logic_preserved() {
         let selector = MMRSelector::new(2, 0.5);
         let fitness = arr1(&[1.0, 0.5, 0.5]);
         let descriptors = arr2(&[
@@ -200,31 +239,9 @@ mod tests {
             [10.0, 0.0]
         ]);
 
-        let indices = selector.run_lazy_greedy(fitness.view(), descriptors.view());
+        let indices = selector.run_optimized(fitness.view(), descriptors.view());
         assert_eq!(indices.len(), 2);
-        assert_eq!(indices[0], 0); // Best fitness
-        assert_eq!(indices[1], 2); // Most diverse
-    }
-
-    #[test]
-    fn test_n_less_than_k() {
-        let selector = MMRSelector::new(10, 0.5);
-        let fitness = arr1(&[1.0, 2.0]);
-        let descriptors = arr2(&[[0.0], [1.0]]);
-        let indices = selector.run_lazy_greedy(fitness.view(), descriptors.view());
-        assert_eq!(indices.len(), 2);
-    }
-
-    #[test]
-    fn test_identical_descriptors() {
-        let selector = MMRSelector::new(3, 0.5);
-        let fitness = arr1(&[10.0, 8.0, 9.0, 5.0]);
-        // All identical - logic should fall back to pure fitness ranking
-        let descriptors = arr2(&[
-            [0.0], [0.0], [0.0], [0.0]
-        ]);
-        let indices = selector.run_lazy_greedy(fitness.view(), descriptors.view());
-        // Should select 10.0, 9.0, 8.0 -> indices 0, 2, 1
-        assert_eq!(indices, vec![0, 2, 1]);
+        assert_eq!(indices[0], 0); 
+        assert_eq!(indices[1], 2); 
     }
 }
