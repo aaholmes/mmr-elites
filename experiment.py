@@ -5,7 +5,7 @@ import time
 import pickle
 
 # --- Config ---
-SEED = 1337          # <--- REPRODUCIBILITY LOCK
+SEED = 1337
 GENERATIONS = 3000
 BATCH_SIZE = 500
 ARCHIVE_SIZE = 1000
@@ -13,14 +13,13 @@ LAMBDA = 0.95
 SIGMA = 0.1
 
 def main():
-    # 1. Set Seed
     np.random.seed(SEED)
-    print(f"🚀 LAUNCHING MUSE-QD: DATA RUN (Seed={SEED})")
+    print(f"🚀 LAUNCHING MUSE-QD: HIGH-RES START RUN (Seed={SEED})")
     
     task = Arm20Task()
     selector = mmr_elites_rs.MMRSelector(ARCHIVE_SIZE, LAMBDA)
     
-    # 2. Init
+    # Init
     archive = np.random.uniform(-np.pi, np.pi, (ARCHIVE_SIZE, 20))
     fit, desc = task.evaluate(archive)
     indices = selector.select(fit, desc)
@@ -28,13 +27,11 @@ def main():
     fit = fit[indices]
     desc = desc[indices]
     
-    # 3. History Storage
     history = {"gen": [], "max_fit": []}
     tips_snapshots = {} 
     
     start_time = time.time()
     
-    # 4. Evolution Loop
     for gen in range(1, GENERATIONS + 1):
         parents = archive[np.random.randint(0, len(archive), BATCH_SIZE)]
         offspring = parents + np.random.normal(0, SIGMA, (BATCH_SIZE, 20))
@@ -49,9 +46,11 @@ def main():
         fit = pool_fit[survivor_idx]
         desc = pool_desc[survivor_idx]
         
-        # LOGGING (Every 10 Gens)
-        if gen % 10 == 0:
-            max_f = np.max(fit)
+        max_f = np.max(fit)
+        
+        # --- LOGGING LOGIC UPDATE ---
+        # Save if: First 10 gens OR Every 10 gens thereafter
+        if gen <= 10 or gen % 10 == 0:
             tips_snapshots[gen] = desc.copy()
             history["gen"].append(gen)
             history["max_fit"].append(max_f)
