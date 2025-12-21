@@ -39,38 +39,27 @@ PyO3 Interface🟢 ImplementedZero-copy ndarray views working.
 Cargo Configuration🟢 ReadyBuilds with `maturin develop --release`.
 
 ### Benchmarks
-Arm20DOF (Task)🟢 ImplementedIncludes Forward Kinematics & Wall Collision ("The Trap").
-Performance Benchmarks🟢 Implemented`benchmark.py` and `stress_test.py` confirm >100x speedup.
-Standard MAP-Elites🔴 PendingNeeded for quality comparison (Phase 3).
+Arm20DOF (Toy Task)🟢 ImplementedIncludes "The Trap" (Collision Detection).
+Ant-v4 (MuJoCo)🟢 ImplementedHigh-dimensional continuous control task (via Gymnasium).
+Performance Benchmarks🟢 Implemented`stress_test.py` confirms >100x speedup.
+Standard MAP-Elites🟢 ImplementedBaseline available in `map_elites_baseline.py`.
 
 ### Visualization
-Coverage Metrics🟡 Partial`plot_results.py` generates archive plots, but no comparative metrics yet.
-QD-Score Plots🔴 PendingNeed standardized history logger for both algorithms.
+Coverage Metrics🟡 PartialPlots exist, but quantiative metrics (e.g., QD-Score) pending.
 
 ## Installation & UsagePrerequisites: Rust (cargo), Python 3.10+, maturin.
+**New:** Requires `gymnasium[mujoco]` for Ant tasks.
 
 ```bash
 # 1. Compile the Rust backend
 maturin develop --release
 
-# 2. Run the Benchmark (Performance)
-python benchmark.py
+# 2. Run Benchmarks
+python benchmark.py          # Speed comparison
+python map_elites_baseline.py # Run MAP-Elites Baseline (Ant)
 
-# 3. Run the Experiment (Arm20 Task)
-python experiment.py
-```
-Minimal Example:
-
-```python
-import mmr_elites_rs
-import numpy as np
-
-# Initialize Selector (K=1000 elites, Lambda=0.5)
-selector = mmr_elites_rs.MMRSelector(1000, 0.5)
-
-# Survival Step (Zero-Copy)
-# fitness: (N,), descriptors: (N, 20)
-survivors = selector.select(fitness_array, descriptor_array)
+# 3. Run Experiments
+python experiment.py         # Run MUSE-QD (Arm20)
 ```
 
 ## Roadmap & TimelineTotal Estimated Effort: 16 - 24 Hours
@@ -78,14 +67,14 @@ survivors = selector.select(fitness_array, descriptor_array)
 Phase 1: The Engine (Days 1-2)
 - [x] Initialize Repo: Set up git, cargo, and pyproject.toml.
 - [x] Implement Rust Core: Port the LazyGreedy logic from design doc to src/lib.rs.
-- [x] Unit Testing: Verify LazyGreedy returns identical subsets to Brute Force (`scripts/test_correctness.py`).
+- [x] Unit Testing: Verify LazyGreedy returns identical subsets to Brute Force.
 - [x] Bind: Verify numpy to ndarray zero-copy passing works without segfaults.
 
 Phase 2: The Benchmark (Days 3-4)
 - [x] Implement Arm20: `tasks/arm_20.py` implements FK and Obstacle Avoidance.
+- [x] Implement Ant-v4: `tasks/ant.py` connects to MuJoCo via Gymnasium.
 - [x] Performance Tests: `stress_test.py` validates O(N log N) scaling.
-- [ ] Implement Baseline: Code a "Sparse MAP-Elites" (using a hash map) to compare against.
-- [x] Data Pipeline: `experiment.py` saves snapshots to `muse_results.pkl`.
+- [x] Implement Baseline: `map_elites_baseline.py` provides the MAP-Elites comparison.
 
 Phase 3: Analysis & Polish (Day 5)
 - [ ] Metric: Coverage: Implement a "Union of Hyperspheres" or "k-NN" metric to quantify coverage in 20D.

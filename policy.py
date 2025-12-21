@@ -25,7 +25,7 @@ class TanhMLP:
         idx += self.b1_size
         
         w2 = genome[idx : idx+self.w2_size].reshape(self.hidden_dim, self.output_dim)
-        idx += self.b2_size # Bug fix: increment index correctly
+        idx += self.w2_size
         
         b2 = genome[idx : idx+self.b2_size]
         
