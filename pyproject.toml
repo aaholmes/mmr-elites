@@ -1,0 +1,29 @@
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "mmr-elites"
+version = "0.1.0"
+description = "Quality-Diversity as Information Retrieval: Overcoming the Curse of Dimensionality with Maximum Marginal Relevance Selection of Elites (MMR-Elites)"
+requires-python = ">=3.8"
+dependencies = [
+    "numpy>=1.20",
+    "scipy>=1.7",
+    "matplotlib>=3.5",
+    "scikit-learn>=1.0",
+    "gymnasium>=0.26",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "black>=22.0",
+    "isort>=5.0",
+]
+
+[tool.maturin]
+features = ["pyo3/extension-module"]
+python-source = "mmr_elites"
+module-name = "mmr_elites_rs"
