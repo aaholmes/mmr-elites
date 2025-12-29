@@ -1,4 +1,5 @@
-target/
-tasks/__pycache__/
+full_repository_context.txt
 muse_results.pkl
 __pycache__/
+target/
+tasks/__pycache__/
