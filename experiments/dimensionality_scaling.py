@@ -1,78 +1,177 @@
 """
-Dimensionality Scaling Experiment.
-Compares MMR-Elites vs MAP-Elites vs CVT-MAP-Elites as D increases.
+Dimensionality Scaling Experiment
+=================================
+
+THE KEY EXPERIMENT for the paper.
+
+Tests how algorithms scale as behavior descriptor dimension increases.
+Expected result: MAP-Elites degrades, MMR-Elites maintains performance.
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
+import pickle
+import json
 from pathlib import Path
-from mmr_elites.utils.config import ExperimentConfig
-from experiments.run_benchmark import run_experiment
-from mmr_elites.utils.visualization import set_publication_style, save_figure
+from typing import Dict, List
+
+from mmr_elites.tasks.arm import ArmTask
+from mmr_elites.algorithms import (
+    run_mmr_elites, run_map_elites, run_cvt_map_elites, run_random_search
+)
 
 
-def main():
-    set_publication_style()
+def run_dimensionality_scaling(
+    dimensions: List[int] = None,
+    n_seeds: int = 10,
+    generations: int = 2000,
+    archive_size: int = 1000,
+    batch_size: int = 200,
+    lambda_val: float = 0.5,
+    mutation_sigma: float = 0.1,
+    output_dir: Path = None,
+) -> Dict:
+    """
+    Run dimensionality scaling experiment.
     
-    # Dimensions to test
-    dims = [2, 5, 10, 20, 50]
-    algorithms = ["mmr_elites", "map_elites", "cvt_map_elites", "random"]
-    seeds = [42, 43, 44]
+    Args:
+        dimensions: List of dimensions to test (default: [5, 10, 20, 50, 100])
+        n_seeds: Number of random seeds
+        generations: Generations per run
+        archive_size: Archive size K
+        batch_size: Offspring per generation
+        lambda_val: MMR-Elites diversity weight
+        mutation_sigma: Mutation standard deviation
+        output_dir: Where to save results
     
-    results = {alg: {d: [] for d in dims} for alg in algorithms}
+    Returns:
+        Dictionary with all results
+    """
+    if dimensions is None:
+        dimensions = [5, 10, 20, 50, 100]
     
-    for d in dims:
-        print(f"\n--- Testing Dimension D={d} ---")
-        for alg in algorithms:
-            # Skip MAP-Elites for high D (it will OOM or be too slow)
-            if alg == "map_elites" and d > 10:
-                print(f"Skipping MAP-Elites for D={d}")
-                continue
-                
-            for seed in seeds:
-                config = ExperimentConfig(
-                    task="arm",
-                    algorithm=alg,
-                    n_dof=d,
-                    generations=200,
-                    batch_size=100,
-                    seed=seed,
-                    exp_name=f"scaling_d{d}"
-                )
-                try:
-                    res = run_experiment(config)
-                    results[alg][d].append(res["final_metrics"]["qd_score_at_budget"])
-                except Exception as e:
-                    print(f"Error running {alg} at D={d}: {e}")
-
-    # Plotting
-    fig, ax = plt.subplots(figsize=(8, 5))
+    if output_dir is None:
+        output_dir = Path("results/dimensionality_scaling")
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
     
-    for alg in algorithms:
-        means = []
-        stds = []
-        valid_dims = []
-        for d in dims:
-            if results[alg][d]:
-                means.append(np.mean(results[alg][d]))
-                stds.append(np.std(results[alg][d]))
-                valid_dims.append(d)
+    algorithms = {
+        "MMR-Elites": lambda task, seed: run_mmr_elites(
+            task, archive_size=archive_size, generations=generations,
+            batch_size=batch_size, lambda_val=lambda_val,
+            mutation_sigma=mutation_sigma, seed=seed
+        ),
+        "MAP-Elites": lambda task, seed: run_map_elites(
+            task, generations=generations, batch_size=batch_size,
+            bins_per_dim=3, mutation_sigma=mutation_sigma, seed=seed
+        ),
+        "CVT-MAP-Elites": lambda task, seed: run_cvt_map_elites(
+            task, n_niches=archive_size, generations=generations,
+            batch_size=batch_size, mutation_sigma=mutation_sigma, seed=seed
+        ),
+        "Random": lambda task, seed: run_random_search(
+            task, archive_size=archive_size, generations=generations,
+            batch_size=batch_size, seed=seed
+        ),
+    }
+    
+    all_results = {dim: {alg: [] for alg in algorithms} for dim in dimensions}
+    
+    for dim in dimensions:
+        print(f"\n{'='*60}")
+        print(f"DIMENSION: {dim}")
+        print("="*60)
         
-        if valid_dims:
-            means = np.array(means)
-            stds = np.array(stds)
-            ax.plot(valid_dims, means, marker='o', label=alg, linewidth=2)
-            ax.fill_between(valid_dims, means - stds, means + stds, alpha=0.2)
-
-    ax.set_xlabel("Behavior Space Dimension (D)")
-    ax.set_ylabel("QD-Score (Top 1000)")
-    ax.set_title("Dimensionality Scaling Comparison")
-    ax.legend()
-    ax.set_xscale('log', base=2)
-    ax.grid(True, which="both", ls="-", alpha=0.2)
+        task = ArmTask(n_dof=dim, use_highdim_descriptor=True)
+        
+        for seed in range(n_seeds):
+            print(f"\n  Seed {seed + 1}/{n_seeds}")
+            
+            for alg_name, alg_fn in algorithms.items():
+                print(f"    {alg_name}...", end=" ", flush=True)
+                try:
+                    result = alg_fn(task, seed)
+                    all_results[dim][alg_name].append(result)
+                    print(f"QD@K={result['final_metrics']['qd_score_at_budget']:.2f}, "
+                          f"MeanFit={result['final_metrics']['mean_fitness']:.4f}")
+                except Exception as e:
+                    print(f"ERROR: {e}")
     
-    save_figure(fig, "paper/figures/dimensionality_scaling")
-    plt.show()
+    # Save results
+    with open(output_dir / "results.pkl", "wb") as f:
+        pickle.dump(all_results, f)
+    
+    # Generate summary
+    summary = generate_summary(all_results, dimensions, list(algorithms.keys()))
+    with open(output_dir / "summary.json", "w") as f:
+        json.dump(summary, f, indent=2)
+    
+    # Print summary table
+    print_summary_table(summary, dimensions, list(algorithms.keys()))
+    
+    return all_results
+
+
+def generate_summary(results: Dict, dimensions: List[int], algorithms: List[str]) -> Dict:
+    """Generate summary statistics."""
+    summary = {}
+    
+    for dim in dimensions:
+        summary[dim] = {}
+        for alg in algorithms:
+            if results[dim][alg]:
+                metrics = {}
+                for metric in ["qd_score_at_budget", "mean_fitness", "uniformity_cv", "archive_size"]:
+                    values = [r["final_metrics"].get(metric, 0) for r in results[dim][alg]]
+                    metrics[metric] = {
+                        "mean": float(np.mean(values)),
+                        "std": float(np.std(values)),
+                    }
+                summary[dim][alg] = metrics
+    
+    return summary
+
+def print_summary_table(summary: Dict, dimensions: List[int], algorithms: List[str]):
+    """Print publication-ready summary table."""
+    print("\n" + "="*100)
+    print("SUMMARY: QD-Score @ Budget (mean ± std)")
+    print("="*100)
+    
+    header = f"{'Dim':<6}"
+    for alg in algorithms:
+        header += f" | {alg:<20}"
+    print(header)
+    print("-" + "="*99)
+    
+    for dim in dimensions:
+        row = f"{dim:<6}"
+        for alg in algorithms:
+            if alg in summary.get(dim, {}):
+                m = summary[dim][alg]["qd_score_at_budget"]
+                row += f" | {m['mean']:>8.2f} ± {m['std']:<7.2f}"
+            else:
+                row += f" | {'N/A':^20}"
+        print(row)
+
 
 if __name__ == "__main__":
-    main()
+    import argparse
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--quick", action="store_true")
+    parser.add_argument("--full", action="store_true")
+    args = parser.parse_args()
+    
+    if args.quick:
+        run_dimensionality_scaling(
+            dimensions=[5, 20],
+            n_seeds=2,
+            generations=200,
+        )
+    elif args.full:
+        run_dimensionality_scaling(
+            dimensions=[5, 10, 20, 50, 100],
+            n_seeds=10,
+            generations=2000,
+        )
+    else:
+        run_dimensionality_scaling()

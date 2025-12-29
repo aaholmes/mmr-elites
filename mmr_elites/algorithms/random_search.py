@@ -1,129 +1,97 @@
 """
-Random Search Baseline.
+Random Search baseline.
+
+Maintains archive of K best-diverse solutions without any selection pressure.
+Used to verify that algorithms actually improve over random.
 """
 
 import numpy as np
 import time
-from typing import Dict, Tuple, Optional
-from .base import QDAlgorithm, QDResult
-from ..metrics.qd_metrics import compute_all_metrics
+from typing import Dict, Tuple
+from .base import QDAlgorithm, QDResult, ExperimentConfig
 
 
 class RandomSearch(QDAlgorithm):
     """
-    Random Search baseline.
-    Generates random solutions and keeps the best K (by fitness) or all of them.
-    For fair comparison, we usually treat it as a "filter" that keeps top-K.
+    Random search baseline that maintains top-K solutions.
+    
+    Generates random solutions and keeps the K with highest fitness.
+    This is the simplest possible QD algorithm.
     """
     
-    def __init__(self, archive_size: int):
-        self.archive_size = archive_size
-        self.archive = np.array([])
-        self.fitness = np.array([])
-        self.descriptors = np.array([])
+    def __init__(self, config: ExperimentConfig):
+        super().__init__(config)
+        self.n_dof = None
     
-    def run(
-        self,
-        task,
-        generations: int,
-        batch_size: int,
-        mutation_sigma: float, # Unused
-        seed: int,
-        log_interval: int = 100,
-    ) -> QDResult:
+    def initialize(self, task, seed: int):
+        """Initialize with random solutions."""
         np.random.seed(seed)
         
-        if hasattr(task, 'genome_dim'):
-            n_dof = task.genome_dim
-        elif hasattr(task, 'n_dof'):
-            n_dof = task.n_dof
-        else:
-            n_dof = 20
-            
-        history = {
-            "generation": [],
-            "qd_score": [],
-            "qd_score_at_budget": [],
-            "max_fitness": [],
-            "mean_fitness": [],
-            "mean_pairwise_distance": [],
-            "uniformity_cv": [],
-            "archive_size": [],
-        }
+        self.n_dof = getattr(task, 'n_dof', getattr(task, 'n_dim', 20))
         
-        start_time = time.time()
-        
-        # We simulate "generations" to match other algos
-        # Total evaluations = generations * batch_size
-        # We keep ALL solutions found, but metrics will look at top-K
-        
-        all_genomes = []
-        all_fitness = []
-        all_descriptors = []
-        
-        for gen in range(1, generations + 1):
-            # Generate random batch
-            batch = np.random.uniform(-np.pi, np.pi, (batch_size, n_dof))
-            fit, desc = task.evaluate(batch)
-            
-            all_genomes.append(batch)
-            all_fitness.append(fit)
-            all_descriptors.append(desc)
-            
-            if gen % log_interval == 0:
-                # Concatenate current results
-                curr_fit = np.concatenate(all_fitness)
-                curr_desc = np.vstack(all_descriptors)
-                
-                # Keep top K for metrics (simulating an archive)
-                if len(curr_fit) > self.archive_size:
-                    # Sort by fitness
-                    top_k_idx = np.argsort(curr_fit)[-self.archive_size:]
-                    metric_fit = curr_fit[top_k_idx]
-                    metric_desc = curr_desc[top_k_idx]
-                else:
-                    metric_fit = curr_fit
-                    metric_desc = curr_desc
-                
-                metrics = compute_all_metrics(
-                    metric_fit, metric_desc, budget_k=self.archive_size
-                )
-                
-                history["generation"].append(gen)
-                for key in history:
-                    if key != "generation" and key in metrics:
-                        history[key].append(metrics[key])
-        
-        runtime = time.time() - start_time
-        
-        # Final aggregation
-        self.archive = np.vstack(all_genomes)
-        self.fitness = np.concatenate(all_fitness)
-        self.descriptors = np.vstack(all_descriptors)
-        
-        # Select top K for final result
-        if len(self.fitness) > self.archive_size:
-            top_k_idx = np.argsort(self.fitness)[-self.archive_size:]
-            final_genomes = self.archive[top_k_idx]
-            final_fitness = self.fitness[top_k_idx]
-            final_descriptors = self.descriptors[top_k_idx]
-        else:
-            final_genomes = self.archive
-            final_fitness = self.fitness
-            final_descriptors = self.descriptors
-
-        return QDResult(
-            algorithm="RandomSearch",
-            seed=seed,
-            runtime=runtime,
-            final_metrics=compute_all_metrics(
-                final_fitness, final_descriptors, budget_k=self.archive_size
-            ),
-            history=history,
-            final_genomes=final_genomes,
-            final_fitness=final_fitness,
-            final_descriptors=final_descriptors,
+        # Generate initial population
+        self.archive = np.random.uniform(
+            -np.pi, np.pi, (self.config.archive_size, self.n_dof)
         )
+        self.fitness, self.descriptors = task.evaluate(self.archive)
+    
+    def step(self, task) -> Dict[str, float]:
+        """Generate random solutions and keep best K."""
+        # Generate new random solutions
+        new_solutions = np.random.uniform(
+            -np.pi, np.pi, (self.config.batch_size, self.n_dof)
+        )
+        new_fit, new_desc = task.evaluate(new_solutions)
+        
+        # Pool with current archive
+        pool_genes = np.vstack([self.archive, new_solutions])
+        pool_fit = np.concatenate([self.fitness, new_fit])
+        pool_desc = np.vstack([self.descriptors, new_desc])
+        
+        # Keep top K by fitness
+        top_k_idx = np.argsort(pool_fit)[-self.config.archive_size:]
+        
+        self.archive = pool_genes[top_k_idx]
+        self.fitness = pool_fit[top_k_idx]
+        self.descriptors = pool_desc[top_k_idx]
+        
+        # Compute metrics
+        from mmr_elites.metrics.qd_metrics import compute_all_metrics
+        return compute_all_metrics(
+            self.fitness, self.descriptors, self.config.archive_size
+        )
+    
+    def get_archive(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Return current archive state."""
+        return self.archive, self.fitness, self.descriptors
 
-    def get_archive_size(self) -> int:
-        return self.archive_size
+
+def run_random_search(
+    task,
+    archive_size: int = 1000,
+    generations: int = 1000,
+    batch_size: int = 200,
+    seed: int = 42,
+    log_interval: int = 100,
+) -> Dict:
+    """Functional interface for Random Search."""
+    config = ExperimentConfig(
+        archive_size=archive_size,
+        generations=generations,
+        batch_size=batch_size,
+        log_interval=log_interval,
+    )
+    
+    alg = RandomSearch(config)
+    result = alg.run(task, seed)
+    
+    return {
+        "algorithm": result.algorithm,
+        "seed": result.seed,
+        "runtime": result.runtime,
+        "final_metrics": result.final_metrics,
+        "history": result.history,
+        "final_genomes": result.final_genomes,
+        "final_fitness": result.final_fitness,
+        "final_descriptors": result.final_descriptors,
+    }

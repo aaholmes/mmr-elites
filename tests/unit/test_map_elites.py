@@ -10,6 +10,8 @@ Tests verify:
 
 import pytest
 import numpy as np
+from mmr_elites.algorithms.map_elites import MAPElites
+from mmr_elites.algorithms.base import ExperimentConfig
 
 
 class TestGridCellAssignment:
@@ -17,9 +19,8 @@ class TestGridCellAssignment:
     
     def test_basic_assignment(self):
         """Test basic cell assignment."""
-        from mmr_elites.algorithms.map_elites import MAPElites
-        
-        me = MAPElites(bins_per_dim=10, descriptor_bounds=[(0, 1), (0, 1)])
+        config = ExperimentConfig()
+        me = MAPElites(config, bins_per_dim=10)
         
         # Corners
         assert me._get_cell(np.array([0.0, 0.0])) == (0, 0)
@@ -30,21 +31,18 @@ class TestGridCellAssignment:
     
     def test_clipping(self):
         """Values outside [0,1] should be clipped."""
-        from mmr_elites.algorithms.map_elites import MAPElites
-        
-        me = MAPElites(bins_per_dim=10, descriptor_bounds=[(0, 1), (0, 1)])
+        config = ExperimentConfig()
+        me = MAPElites(config, bins_per_dim=10)
         
         # Out of bounds
         assert me._get_cell(np.array([-0.1, 1.5])) == (0, 9)
     
     def test_high_dimensional(self):
         """Test with high-dimensional descriptors."""
-        from mmr_elites.algorithms.map_elites import MAPElites
+        config = ExperimentConfig()
+        me = MAPElites(config, bins_per_dim=3)
         
-        bounds = [(0, 1)] * 20
-        me = MAPElites(bins_per_dim=3, descriptor_bounds=bounds)
-        
-        desc = np.ones(20) * 0.5  # All 0.5 -> all cells = 1
+        desc = np.ones(20) * 0.5
         cell = me._get_cell(desc)
         
         assert len(cell) == 20
@@ -56,9 +54,8 @@ class TestArchiveUpdate:
     
     def test_add_to_empty_cell(self):
         """Adding to empty cell should succeed."""
-        from mmr_elites.algorithms.map_elites import MAPElites
-        
-        me = MAPElites(bins_per_dim=10, descriptor_bounds=[(0, 1), (0, 1)])
+        config = ExperimentConfig()
+        me = MAPElites(config, bins_per_dim=10)
         
         genome = np.array([0.1, 0.2])
         fitness = 0.5
@@ -71,9 +68,8 @@ class TestArchiveUpdate:
     
     def test_replace_worse_fitness(self):
         """Better fitness should replace worse."""
-        from mmr_elites.algorithms.map_elites import MAPElites
-        
-        me = MAPElites(bins_per_dim=10, descriptor_bounds=[(0, 1), (0, 1)])
+        config = ExperimentConfig()
+        me = MAPElites(config, bins_per_dim=10)
         
         # Add initial
         me._add_to_archive(np.array([1.0]), 0.3, np.array([0.5, 0.5]))
@@ -87,9 +83,8 @@ class TestArchiveUpdate:
     
     def test_reject_worse_fitness(self):
         """Worse fitness should not replace better."""
-        from mmr_elites.algorithms.map_elites import MAPElites
-        
-        me = MAPElites(bins_per_dim=10, descriptor_bounds=[(0, 1), (0, 1)])
+        config = ExperimentConfig()
+        me = MAPElites(config, bins_per_dim=10)
         
         # Add initial
         me._add_to_archive(np.array([1.0]), 0.8, np.array([0.5, 0.5]))
@@ -107,20 +102,18 @@ class TestParentSampling:
     
     def test_uniform_sampling(self):
         """Parents should be sampled uniformly from archive."""
-        from mmr_elites.algorithms.map_elites import MAPElites
-        
-        me = MAPElites(bins_per_dim=5, descriptor_bounds=[(0, 1)])
+        config = ExperimentConfig()
+        me = MAPElites(config, bins_per_dim=5)
         
         # Add 5 solutions to different cells
         for i in range(5):
-            desc = np.array([i * 0.2 + 0.1])
+            desc = np.ones(2) * (i * 0.2 + 0.1)
             me._add_to_archive(np.array([float(i)]), 0.5, desc)
         
         np.random.seed(42)
         parents = me._sample_parents(1000)
         
         # Check roughly uniform (each cell ~200 samples)
-        # parents is (1000, 1) because genome_dim is 1 here
         counts = {}
         for p in parents:
             key = tuple(p)

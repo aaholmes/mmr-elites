@@ -67,7 +67,6 @@ class TestEvolutionLoop:
             batch_size=50,
             mutation_sigma=0.1,
             seed=42,
-            descriptor_dim=5,
         )
         
         assert "final_metrics" in result
@@ -119,7 +118,5 @@ class TestAlgorithmComparison:
         me_cv = me_result["final_metrics"]["uniformity_cv"]
         
         # MMR should be at least comparable or better in uniformity
-        # We don't strictly assert mmr_cv < me_cv because it depends on many factors,
-        # but the test helps track it.
         assert mmr_cv is not None
         assert me_cv is not None
