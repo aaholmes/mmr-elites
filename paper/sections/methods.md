@@ -60,6 +60,8 @@ where:
 - λ = 1: Pure diversity selection (spread points maximally)
 - λ = 0.5: Balanced selection (default)
 
+Unlike grid-based methods which impose a hard constraint on diversity (bin occupancy) and then optimize quality, MMR imposes a soft scalarization. This allows the archive to dynamically compress in regions of high fitness (tolerating lower diversity for higher quality) and expand in regions of low fitness (demanding higher novelty), essentially performing automatic, adaptive resolution scaling.
+
 #### Greedy Selection Algorithm
 
 MMR-Elites uses greedy selection, which provably achieves good approximations for submodular objectives:
