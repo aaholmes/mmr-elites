@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Main Experiment: MUSE-QD vs MAP-Elites vs CVT-MAP-Elites
+Main Experiment: MMR-Elites vs MAP-Elites vs CVT-MAP-Elites
 ========================================================
 
 This is THE experiment for the GECCO paper.
@@ -10,11 +10,11 @@ Task: 20-DOF Planar Arm with 20D behavior descriptors (joint angles)
 This setup demonstrates the curse of dimensionality:
 - MAP-Elites with 3 bins/dim = 3^20 ≈ 3.5 billion cells → degrades to random search
 - CVT-MAP-Elites: K pre-computed centroids, fixed memory
-- MUSE-QD: K solutions selected via MMR, fixed memory
+- MMR-Elites: K solutions selected via MMR, fixed memory
 
 Expected results:
-- MUSE-QD > CVT-MAP-Elites > MAP-Elites on QD-Score
-- MUSE-QD achieves better uniformity (lower CV of k-NN distances)
+- MMR-Elites > CVT-MAP-Elites > MAP-Elites on QD-Score
+- MMR-Elites achieves better uniformity (lower CV of k-NN distances)
 - MAP-Elites archive grows unboundedly but with low-quality solutions
 
 Usage:
@@ -150,9 +150,9 @@ def compute_metrics(fitness: np.ndarray, descriptors: np.ndarray) -> Dict[str, f
 # Algorithms
 # =============================================================================
 
-def run_muse_qd(task, generations, archive_size, batch_size, mutation_sigma, 
+def run_mmr_elites_experiment(task, generations, archive_size, batch_size, mutation_sigma, 
                 lambda_val, seed, log_interval=100) -> Dict:
-    """Run MUSE-QD algorithm."""
+    """Run MMR-Elites algorithm."""
     if not RUST_AVAILABLE:
         raise RuntimeError("Rust backend required")
     
@@ -191,7 +191,7 @@ def run_muse_qd(task, generations, archive_size, batch_size, mutation_sigma,
             history["generation"].append(gen)
     
     return {
-        "algorithm": "MUSE-QD",
+        "algorithm": "MMR-Elites",
         "seed": seed,
         "runtime": time.time() - start,
         "final_metrics": compute_metrics(fit, desc),
@@ -364,10 +364,10 @@ def run_experiment(
     print(f"Seeds: {n_seeds}")
     print(f"Generations: {generations}")
     print(f"Archive Size: {archive_size}")
-    print(f"Lambda (MUSE): {lambda_val}")
+    print(f"Lambda (MMR): {lambda_val}")
     print("="*70)
     
-    all_results = {"MUSE-QD": [], "MAP-Elites": [], "CVT-MAP-Elites": []}
+    all_results = {"MMR-Elites": [], "MAP-Elites": [], "CVT-MAP-Elites": []}
     
     for seed in range(n_seeds):
         print(f"\n{'='*50}")
@@ -375,10 +375,10 @@ def run_experiment(
         print("="*50)
         
         if RUST_AVAILABLE:
-            print("  Running MUSE-QD...", end=" ", flush=True)
-            r = run_muse_qd(task, generations, archive_size, batch_size, 
+            print("  Running MMR-Elites...", end=" ", flush=True)
+            r = run_mmr_elites_experiment(task, generations, archive_size, batch_size, 
                            mutation_sigma, lambda_val, seed)
-            all_results["MUSE-QD"].append(r)
+            all_results["MMR-Elites"].append(r)
             print(f"QD={r['final_metrics']['qd_score']:.2f}, "
                   f"MaxFit={r['final_metrics']['max_fitness']:.4f}")
         
@@ -408,7 +408,7 @@ def run_experiment(
                "uniformity_cv", "archive_size"]
     
     header = f"{'Metric':<25}"
-    for alg in ["MUSE-QD", "MAP-Elites", "CVT-MAP-Elites"]:
+    for alg in ["MMR-Elites", "MAP-Elites", "CVT-MAP-Elites"]:
         header += f" | {alg:<20}"
     print(header)
     print("-"*90)
@@ -417,7 +417,7 @@ def run_experiment(
     for m in metrics:
         row = f"{m:<25}"
         summary[m] = {}
-        for alg in ["MUSE-QD", "MAP-Elites", "CVT-MAP-Elites"]:
+        for alg in ["MMR-Elites", "MAP-Elites", "CVT-MAP-Elites"]:
             if all_results[alg]:
                 vals = [r["final_metrics"].get(m, 0) for r in all_results[alg]]
                 mean, std = np.mean(vals), np.std(vals)
@@ -430,6 +430,27 @@ def run_experiment(
     with open(output_path / "summary.json", "w") as f:
         json.dump(summary, f, indent=2)
     
+    # Add statistical analysis
+    from mmr_elites.utils.statistics import compute_all_statistics
+    
+    print("\n" + "="*90)
+    print("STATISTICAL ANALYSIS (vs MAP-Elites)")
+    print("="*90)
+    
+    try:
+        stats = compute_all_statistics(all_results, metric="qd_score", baseline="MAP-Elites")
+        for alg, s in stats.items():
+            if alg.startswith("_"): continue
+            print(f"{alg:20s}: {s['mean']:.2f} ± {s['std']:.2f} (95% CI: [{s['ci_95_low']:.2f}, {s['ci_95_high']:.2f}])")
+        
+        if "_comparisons" in stats:
+            print("\nSignificance vs MAP-Elites:")
+            for alg, comp in stats["_comparisons"].items():
+                sig = "***" if comp["significant_001"] else ("*" if comp["significant_005"] else "")
+                print(f"  {alg:18s}: d={comp['cohens_d']:.2f}, p={comp['p_value']:.4f} {sig}")
+    except Exception as e:
+        print(f"⚠️  Statistical analysis failed: {e}")
+
     # Generate plots
     try:
         import matplotlib.pyplot as plt
@@ -439,10 +460,10 @@ def run_experiment(
         axes = axes.flatten()
         
         metrics_plot = ["qd_score", "max_fitness", "mean_pairwise_distance", "archive_size"]
-        colors = {"MUSE-QD": "#0072B2", "MAP-Elites": "#D55E00", "CVT-MAP-Elites": "#009E73"}
+        colors = {"MMR-Elites": "#0072B2", "MAP-Elites": "#D55E00", "CVT-MAP-Elites": "#009E73"}
         
         for ax, metric in zip(axes, metrics_plot):
-            for alg in ["MUSE-QD", "MAP-Elites", "CVT-MAP-Elites"]:
+            for alg in ["MMR-Elites", "MAP-Elites", "CVT-MAP-Elites"]:
                 if not all_results[alg]:
                     continue
                 if metric not in all_results[alg][0]["history"]:
@@ -478,7 +499,7 @@ def run_experiment(
 # =============================================================================
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="MUSE-QD Main Comparison Experiment")
+    parser = argparse.ArgumentParser(description="MMR-Elites Main Comparison Experiment")
     parser.add_argument("--quick", action="store_true", help="Quick test (2 seeds, 500 gens)")
     parser.add_argument("--full", action="store_true", help="Full experiment (10 seeds, 2000 gens)")
     parser.add_argument("--seeds", type=int, default=5, help="Number of seeds")

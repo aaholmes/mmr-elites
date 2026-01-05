@@ -8,25 +8,8 @@ from typing import Dict, List, Optional, Any, Tuple
 import numpy as np
 import time
 
-
-@dataclass
-class ExperimentConfig:
-    """Configuration for QD experiments."""
-    # Algorithm settings
-    archive_size: int = 1000
-    lambda_val: float = 0.5  # For MMR-Elites
-    bins_per_dim: int = 3    # For MAP-Elites
-    
-    # Evolution settings
-    generations: int = 1000
-    batch_size: int = 200
-    mutation_sigma: float = 0.1
-    
-    # Logging
-    log_interval: int = 100
-    
-    # Task info (set by algorithm)
-    n_dof: int = 20
+# Import unified config
+from mmr_elites.utils.config import ExperimentConfig
 
 
 @dataclass 

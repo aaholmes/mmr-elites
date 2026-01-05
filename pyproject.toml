@@ -13,6 +13,7 @@ dependencies = [
     "matplotlib>=3.5",
     "scikit-learn>=1.0",
     "gymnasium>=0.26",
+    "click>=8.0",
 ]
 
 [project.optional-dependencies]
@@ -22,6 +23,13 @@ dev = [
     "black>=22.0",
     "isort>=5.0",
 ]
+demo = [
+    "streamlit>=1.20",
+    "plotly>=5.0",
+]
+
+[project.scripts]
+mmr-elites = "mmr_elites.cli:main"
 
 [tool.maturin]
 features = ["pyo3/extension-module"]

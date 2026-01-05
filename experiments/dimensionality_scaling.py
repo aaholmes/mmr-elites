@@ -108,6 +108,28 @@ def run_dimensionality_scaling(
     # Print summary table
     print_summary_table(summary, dimensions, list(algorithms.keys()))
     
+    # Add statistical analysis
+    from mmr_elites.utils.statistics import compute_all_statistics
+    
+    print("\n" + "="*100)
+    print("STATISTICAL ANALYSIS")
+    print("="*100)
+    
+    for dim in dimensions:
+        print(f"\n--- Dimension {dim} ---")
+        stats = compute_all_statistics(all_results[dim], baseline="Random")
+        
+        for alg, s in stats.items():
+            if alg.startswith("_"):
+                continue
+            print(f"{alg}: {s['mean']:.2f} ± {s['std']:.2f} (95% CI: [{s['ci_95_low']:.2f}, {s['ci_95_high']:.2f}])")
+        
+        if "_comparisons" in stats:
+            print("\nSignificance vs Random:")
+            for alg, comp in stats["_comparisons"].items():
+                sig = "***" if comp["significant_001"] else ("*" if comp["significant_005"] else "")
+                print(f"  {alg}: d={comp['cohens_d']:.2f}, p={comp['p_value']:.4f} {sig}")
+    
     return all_results
 
 

@@ -8,3 +8,4 @@ results/
 *.pkl
 *.png
 *.pdf
+.context-distiller-cache
