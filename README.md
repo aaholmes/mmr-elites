@@ -38,7 +38,7 @@ MMR-Elites achieves **12x better uniformity** than MAP-Elites and **6x better th
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/mmr-elites.git
+git clone https://github.com/aaholmes/mmr-elites.git
 cd mmr-elites
 
 # Install Rust backend (required)
@@ -133,14 +133,13 @@ mmr-elites/
 If you use this code, please cite:
 
 ```bibtex
-@inproceedings{author2025mmrelites,
-  title={Quality-Diversity as Information Retrieval: 
-         Overcoming the Curse of Dimensionality with 
+@misc{holmes2026mmrelites,
+  title={Quality-Diversity as Information Retrieval:
+         Overcoming the Curse of Dimensionality with
          Maximum Marginal Relevance Selection of Elites},
-  author={Author Name},
-  booktitle={Proceedings of the Genetic and Evolutionary 
-             Computation Conference (GECCO)},
-  year={2025}
+  author={Holmes, Adam},
+  year={2026},
+  note={arXiv preprint forthcoming}
 }
 ```
 

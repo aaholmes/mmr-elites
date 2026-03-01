@@ -1,6 +1,6 @@
 {
   "qd_score": {
-    "MUSE-QD": {
+    "MMR-Elites": {
       "mean": 552.2983155266336,
       "std": 0.16264641807015323
     },
@@ -14,7 +14,7 @@
     }
   },
   "max_fitness": {
-    "MUSE-QD": {
+    "MMR-Elites": {
       "mean": 0.6994344453056471,
       "std": 8.962148845698126e-05
     },
@@ -28,7 +28,7 @@
     }
   },
   "mean_pairwise_distance": {
-    "MUSE-QD": {
+    "MMR-Elites": {
       "mean": 1.9087235952946409,
       "std": 0.0026657618446886966
     },
@@ -42,7 +42,7 @@
     }
   },
   "uniformity_cv": {
-    "MUSE-QD": {
+    "MMR-Elites": {
       "mean": 0.0659546611530239,
       "std": 0.0006982550954524672
     },
@@ -56,7 +56,7 @@
     }
   },
   "archive_size": {
-    "MUSE-QD": {
+    "MMR-Elites": {
       "mean": 1000.0,
       "std": 0.0
     },
