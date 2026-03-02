@@ -20,4 +20,3 @@ paper/*.toc
 paper/*.synctex.gz
 paper/sections/*.aux
 ARXIV_PLAN.md
-CLAUDE.md
