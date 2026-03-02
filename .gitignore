@@ -9,3 +9,13 @@ results/
 *.png
 *.pdf
 .context-distiller-cache
+.coverage
+bundle.xml
+paper/*.log
+paper/*.aux
+paper/*.bbl
+paper/*.blg
+paper/*.out
+paper/*.toc
+paper/*.synctex.gz
+paper/sections/*.aux

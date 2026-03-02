@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-MMR-Elites: Full Benchmark Suite for GECCO Paper
+MMR-Elites: Full Benchmark Suite
 =================================================
 
 Paper: "Quality-Diversity as Information Retrieval: Overcoming the Curse of 

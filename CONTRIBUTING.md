@@ -6,7 +6,7 @@ Thank you for your interest in contributing!
 
 ```bash
 # Clone and setup
-git clone https://github.com/yourusername/mmr-elites.git
+git clone https://github.com/aaholmes/mmr-elites.git
 cd mmr-elites
 
 # Create virtual environment

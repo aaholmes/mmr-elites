@@ -2,7 +2,7 @@
 Visualization Module for MMR-Elites
 ===================================
 
-Generates publication-quality figures for GECCO/EvoStar papers.
+Generates publication-quality figures.
 
 Style guidelines:
 - Use colorblind-friendly palettes

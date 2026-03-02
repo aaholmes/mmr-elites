@@ -3,7 +3,7 @@
 Main Experiment: MMR-Elites vs MAP-Elites vs CVT-MAP-Elites
 ========================================================
 
-This is THE experiment for the GECCO paper.
+Main 20D comparison experiment.
 
 Task: 20-DOF Planar Arm with 20D behavior descriptors (joint angles)
 

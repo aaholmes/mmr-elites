@@ -1,7 +1,7 @@
 """
 MMR-Elites: Maximum Marginal Relevance Selection of Elites.
 
-Core contribution of the GECCO paper.
+Core algorithm implementation.
 """
 
 import numpy as np
