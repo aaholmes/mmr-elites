@@ -47,10 +47,10 @@ class TestWilcoxonSignedRankTest:
     def test_identical_distributions(self):
         x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
         y = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
-        # Identical paired samples: stat should be 0 or p should be 1
+        # Identical paired samples: no difference detected
         stat, p = wilcoxon_signed_rank_test(x, y)
-        assert isinstance(stat, float)
-        assert isinstance(p, float)
+        assert stat == 0.0
+        assert p == 1.0
 
     def test_different_distributions(self):
         x = np.array([10.0, 20.0, 30.0, 40.0, 50.0])

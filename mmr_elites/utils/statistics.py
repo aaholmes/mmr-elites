@@ -41,7 +41,11 @@ def wilcoxon_signed_rank_test(
     Returns:
         (statistic, p_value)
     """
-    stat, p = stats.wilcoxon(x, y, alternative=alternative)
+    try:
+        stat, p = stats.wilcoxon(x, y, alternative=alternative)
+    except ValueError:
+        # All differences are zero — no evidence of a difference
+        return 0.0, 1.0
     return float(stat), float(p)
 
 
