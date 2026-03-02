@@ -1,0 +1,16 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We introduced \mmr, a Quality-Diversity algorithm that reformulates archive maintenance as Maximum Marginal Relevance selection from information retrieval.
+By replacing grid discretization with distance-based greedy selection, \mmr overcomes the curse of dimensionality that limits MAP-Elites to low-dimensional behavior spaces.
+On the $N$-DOF planar arm benchmark, \mmr achieves $12\times$ better uniformity than MAP-Elites at 20D and scales gracefully to 100D.
+The lazy greedy implementation achieves $O(K \log K)$ expected complexity via a Rust backend.
+
+\mmr opens several research directions.
+First, learned distance functions---trained on task-specific similarity---could further improve coverage quality.
+Second, integration with advanced emitters (CMA-ME, policy gradients) could improve fitness optimization while retaining \mmr's diversity maintenance.
+Third, the IR--QD connection invites transfer of neural retrieval techniques (dense retrieval, re-ranking) to large-scale QD optimization.
+Finally, the distance-agnostic formulation enables QD optimization over structured behavior spaces (graphs, sequences, programs) where grid-based methods are fundamentally inapplicable.
+
+\paragraph{Reproducibility.}
+Code, experiment scripts, and reproduction instructions are available at \url{https://github.com/adamholmes/mmr-elites}.

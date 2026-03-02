@@ -1,0 +1,77 @@
+% MMR-Elites: Quality-Diversity Optimization via Maximum Marginal Relevance
+% Preprint — not yet submitted for publication
+
+\documentclass{article}
+
+% Core packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{nicefrac}
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage{xspace}
+\usepackage[margin=1in]{geometry}
+
+% Algorithm styling
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+
+% Custom commands
+\newcommand{\mmr}{\textsc{MMR-Elites}\xspace}
+\newcommand{\map}{\textsc{MAP-Elites}\xspace}
+\newcommand{\cvt}{\textsc{CVT-MAP-Elites}\xspace}
+\newcommand{\dmin}{d_{\min}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\B}{\mathcal{B}}
+\newcommand{\E}{\mathbb{E}}
+
+% Title
+\title{MMR-Elites: Quality-Diversity Optimization via\\Maximum Marginal Relevance}
+
+\author{
+  Adam Holmes \\
+  \texttt{adam@example.com}
+}
+
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Quality-Diversity (QD) algorithms discover diverse collections of high-performing solutions, enabling robust repertoires for robotics, creative design, and optimization.
+The dominant approach, MAP-Elites, discretizes the behavior space into a grid and maintains one elite per cell---but this fails catastrophically when the behavior descriptor dimension exceeds 5, as exponential cell growth makes coverage impossible.
+We introduce \mmr, which reformulates archive maintenance as Maximum Marginal Relevance (MMR) selection from information retrieval.
+Rather than binning solutions into cells, \mmr scores each candidate by a weighted combination of fitness and minimum distance to the current archive, then greedily selects the top-$K$.
+A lazy evaluation strategy with staleness tracking achieves $O(K \log K)$ expected selection complexity.
+On an $N$-DOF planar arm benchmark, \mmr achieves $12\times$ better uniformity than \map at 20D (coefficient of variation $0.066$ vs.\ $0.832$) and $6\times$ better than \cvt ($0.417$), while maintaining comparable fitness.
+\mmr scales gracefully to 100D behavior spaces where grid-based methods are infeasible.
+The algorithm is distance-agnostic---requiring only a dissimilarity function, not explicit dimensions---opening QD optimization to behavior spaces with non-Euclidean structure.
+Code is available at \url{https://github.com/adamholmes/mmr-elites}.
+\end{abstract}
+
+%% ===================================================================
+\input{sections/introduction}
+\input{sections/related_work}
+\input{sections/methods}
+\input{sections/experiments}
+\input{sections/discussion}
+\input{sections/conclusion}
+%% ===================================================================
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}

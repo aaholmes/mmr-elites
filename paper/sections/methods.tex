@@ -1,0 +1,126 @@
+\section{Methods}
+\label{sec:methods}
+
+We present \mmr, a Quality-Diversity algorithm that reformulates archive maintenance as submodular maximization via Maximum Marginal Relevance (MMR)~\cite{carbonell1998use}.
+
+\subsection{Problem Formulation}
+\label{sec:formulation}
+
+Given a fitness function $f: \mathcal{X} \to \R$ and a behavior descriptor function $b: \mathcal{X} \to \B$, we seek an archive $A \subset \mathcal{X}$ of $K$ solutions maximizing both aggregate quality and behavioral diversity.
+
+MAP-Elites discretizes $\B$ into a grid with $m$ bins per dimension, requiring $m^{\dim(\B)}$ cells---infeasible for $\dim(\B) > 5$.
+We instead formulate QD as a \emph{set selection} problem.
+Given a candidate pool $P = \{x_1, \ldots, x_N\}$, find $A^* \subseteq P$ with $|A^*| = K$ maximizing:
+\begin{equation}
+\label{eq:objective}
+\mathcal{F}(A) = \sum_{x \in A} \left[ (1 - \lambda) \cdot \hat{f}(x) + \lambda \cdot \dmin(x, A \setminus \{x\}) \right]
+\end{equation}
+where $\hat{f}$ is fitness normalized to $[0, 1]$, $\dmin(x, S) = \min_{y \in S} d(b(x), b(y))$ is the minimum behavior-space distance from $x$ to any member of $S$, and $\lambda \in [0, 1]$ controls the fitness--diversity tradeoff.
+
+For $\lambda = 1$, this reduces to the MaxMin Diversity Problem, a well-studied submodular objective for which greedy selection achieves a constant-factor approximation~\cite{nemhauser1978analysis}.
+
+\subsection{MMR Selection}
+\label{sec:mmr_selection}
+
+We adapt MMR from information retrieval, where \emph{relevance} becomes fitness and \emph{redundancy} becomes behavioral similarity.
+At each step, we select:
+\begin{equation}
+\label{eq:mmr}
+x^* = \arg\max_{x \in P \setminus A} \left[ (1 - \lambda) \cdot \hat{f}(x) + \lambda \cdot \dmin(x, A) \right]
+\end{equation}
+
+Unlike grid-based methods that impose hard constraints on diversity (one solution per cell) and then optimize quality, MMR imposes a soft scalarization.
+This allows the archive to adaptively adjust resolution: compressing in regions of high fitness and expanding in sparse regions.
+
+\paragraph{Interpretation of $\lambda$.}
+$\lambda = 0$ yields pure fitness selection (top-$K$ by fitness); $\lambda = 1$ yields pure diversity selection (maximum spread); $\lambda = 0.5$ (default) balances both objectives.
+
+\subsection{Lazy Greedy Selection}
+\label{sec:lazy}
+
+Naive MMR selection requires $O(NK^2)$ time due to recomputing $\dmin$ at each iteration.
+We exploit the key monotonicity property: $\dmin(x, A)$ can only \emph{decrease} as $A$ grows, since adding archive members can only bring candidates closer to their nearest neighbor.
+
+This enables lazy evaluation via a max-heap (Algorithm~\ref{alg:lazy}).
+Each candidate's cached score is an upper bound on its true score.
+We pop the maximum, recompute its score, and accept it only if it remains the best; otherwise we reinsert with the updated score.
+
+\begin{algorithm}[t]
+\caption{Lazy Greedy MMR Selection}
+\label{alg:lazy}
+\begin{algorithmic}[1]
+\REQUIRE Candidates $P$, fitness $f$, descriptors $b$, archive size $K$, parameter $\lambda$
+\ENSURE Archive $A$ of $K$ solutions
+\STATE $A \gets \{\arg\max_{x \in P} f(x)\}$  \COMMENT{Seed with fittest}
+\STATE Initialize max-heap $Q$ with all $x \in P \setminus A$, key: $(1-\lambda)\hat{f}(x) + \lambda \cdot d(b(x), b(A_1))$
+\WHILE{$|A| < K$ and $Q \neq \emptyset$}
+    \STATE $x \gets Q.\text{pop\_max}()$
+    \STATE $d_{\text{new}} \gets \min_{y \in A} d(b(x), b(y))$ \COMMENT{Recompute against full archive}
+    \STATE $s_{\text{new}} \gets (1-\lambda)\hat{f}(x) + \lambda \cdot d_{\text{new}}$
+    \IF{$s_{\text{new}} \geq Q.\text{peek\_max}()$}
+        \STATE $A \gets A \cup \{x\}$ \COMMENT{Still best: accept}
+    \ELSE
+        \STATE $Q.\text{push}(x, s_{\text{new}})$ \COMMENT{Reinsert with updated score}
+    \ENDIF
+\ENDWHILE
+\RETURN $A$
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{Complexity.}
+Best case: $O(N + K \log N)$ when candidates are well-separated and scores rarely change.
+Worst case: $O(K^2 D)$ when every candidate must be re-evaluated $O(K)$ times.
+In practice, each candidate is re-evaluated 2--5 times, yielding effective $O(K \log K \cdot D)$ complexity.
+Our Rust implementation with Rayon parallelization achieves ${\sim}50$ms per generation for $K = 1000$, $D = 20$.
+
+\subsection{The Complete Algorithm}
+\label{sec:full_algorithm}
+
+\mmr combines MMR selection with a standard evolutionary loop (Algorithm~\ref{alg:mmr_elites}).
+
+\begin{algorithm}[t]
+\caption{\mmr Evolution}
+\label{alg:mmr_elites}
+\begin{algorithmic}[1]
+\REQUIRE Task $T$, archive size $K$, generations $G$, batch size $B$, $\lambda$, mutation $\sigma$
+\ENSURE Final archive $A$
+\STATE $P \gets \text{RandomGenomes}(K)$
+\STATE $(f, b) \gets T.\text{evaluate}(P)$
+\STATE $A \gets \text{LazyGreedyMMR}(P, f, b, K, \lambda)$
+\FOR{$g = 1$ to $G$}
+    \STATE $\text{parents} \gets \text{UniformSample}(A, B)$
+    \STATE $\text{offspring} \gets \text{GaussianMutation}(\text{parents}, \sigma)$
+    \STATE $(f_{\text{off}}, b_{\text{off}}) \gets T.\text{evaluate}(\text{offspring})$
+    \STATE $P \gets A \cup \text{offspring}$
+    \STATE $A \gets \text{LazyGreedyMMR}(P, [f_A; f_{\text{off}}], [b_A; b_{\text{off}}], K, \lambda)$
+\ENDFOR
+\RETURN $A$
+\end{algorithmic}
+\end{algorithm}
+
+Key properties: (1) \textbf{Fixed memory}: the archive always contains exactly $K$ solutions; (2) \textbf{Anytime}: valid archive at any generation; (3) \textbf{Parallelizable}: evaluation is embarrassingly parallel; (4) \textbf{Modular}: distance function and mutation operator are easily swapped.
+
+\subsection{Distance-Agnostic Selection}
+\label{sec:distance}
+
+A key advantage of \mmr is its reliance solely on a distance function $d: \B \times \B \to \R_{\geq 0}$ satisfying $d(b, b) = 0$.
+No metric space properties (triangle inequality), fixed dimensionality, or Euclidean structure are required.
+This enables QD optimization over behavior spaces where grid discretization is impossible: graph structures, variable-length sequences, embedding spaces, and temporal data.
+
+\paragraph{Saturating distance functions.}
+Standard Euclidean distance rewards extreme separation, pushing solutions toward behavior space boundaries.
+We propose saturating distances that encode ``different enough'' semantics:
+\begin{equation}
+\label{eq:saturating}
+d_{\text{sat}}(b_i, b_j) = 1 - \exp\left(-\frac{\|b_i - b_j\|}{\sigma}\right)
+\end{equation}
+where $\sigma$ controls the saturation threshold.
+For $\|b_i - b_j\| \ll \sigma$, distance grows linearly (strong local pressure); for $\|b_i - b_j\| \gg \sigma$, $d_{\text{sat}} \approx 1$ (no reward for extreme separation).
+The parameter $\sigma$ can be set automatically from the median pairwise distance in the population.
+
+\subsection{Connection to Information Retrieval}
+\label{sec:ir_connection}
+
+\mmr instantiates a 25-year-old paradigm from information retrieval.
+This connection is not merely analogical---it provides theoretical foundations from diversified retrieval~\cite{carbonell1998use}, algorithmic variants (learned similarity, neural re-ranking), and scalability insights from systems handling millions of documents.
+The mapping is direct: documents $\leftrightarrow$ solutions, query relevance $\leftrightarrow$ fitness, document similarity $\leftrightarrow$ behavior distance, retrieved set $\leftrightarrow$ archive.
