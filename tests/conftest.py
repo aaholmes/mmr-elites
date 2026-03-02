@@ -2,13 +2,15 @@
 Pytest configuration and shared fixtures for MMR-Elites tests.
 """
 
-import pytest
-import numpy as np
 from typing import Tuple
+
+import numpy as np
+import pytest
 
 # Try to import Rust backend
 try:
     import mmr_elites_rs
+
     RUST_AVAILABLE = True
 except ImportError:
     RUST_AVAILABLE = False
@@ -25,7 +27,7 @@ def set_random_seed(random_seed):
     """Set numpy random seed before each test."""
     np.random.seed(random_seed)
     yield
-    
+
 
 @pytest.fixture
 def small_population():
@@ -51,6 +53,7 @@ def medium_population():
 def arm_task():
     """5-DOF arm task for quick tests."""
     from mmr_elites.tasks.arm import ArmTask
+
     return ArmTask(n_dof=5, use_highdim_descriptor=True)
 
 
@@ -58,6 +61,7 @@ def arm_task():
 def arm_task_20dof():
     """20-DOF arm task for main experiments."""
     from mmr_elites.tasks.arm import ArmTask
+
     return ArmTask(n_dof=20, use_highdim_descriptor=True)
 
 
@@ -68,11 +72,10 @@ def mmr_selector():
         pytest.skip("Rust backend not available")
     return mmr_elites_rs.MMRSelector(target_k=100, lambda_val=0.5)
 
+
 def pytest_configure(config):
     """Add custom markers."""
     config.addinivalue_line(
         "markers", "slow: marks tests as slow (deselect with '-m \"not slow\"')"
     )
-    config.addinivalue_line(
-        "markers", "rust: marks tests requiring Rust backend"
-    )
+    config.addinivalue_line("markers", "rust: marks tests requiring Rust backend")

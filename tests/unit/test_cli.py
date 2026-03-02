@@ -3,13 +3,13 @@
 import json
 import tempfile
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
 from click.testing import CliRunner
 
-from mmr_elites.cli import main, create_demo_scaffold
+from mmr_elites.cli import create_demo_scaffold, main
 
 
 @pytest.fixture
@@ -69,7 +69,15 @@ class TestRunCommand:
         with p1, p2, p3, p4:
             result = runner.invoke(
                 main,
-                ["run", "--algorithm", "mmr_elites", "--generations", "10", "--seed", "0"],
+                [
+                    "run",
+                    "--algorithm",
+                    "mmr_elites",
+                    "--generations",
+                    "10",
+                    "--seed",
+                    "0",
+                ],
             )
             assert result.exit_code == 0, result.output
             assert "QD-Score" in result.output
@@ -163,14 +171,22 @@ class TestRunCommand:
                 main,
                 [
                     "run",
-                    "--task", "arm",
-                    "--algorithm", "mmr_elites",
-                    "--generations", "10",
-                    "--archive-size", "50",
-                    "--batch-size", "20",
-                    "--lambda-val", "0.7",
-                    "--n-dof", "5",
-                    "--seed", "123",
+                    "--task",
+                    "arm",
+                    "--algorithm",
+                    "mmr_elites",
+                    "--generations",
+                    "10",
+                    "--archive-size",
+                    "50",
+                    "--batch-size",
+                    "20",
+                    "--lambda-val",
+                    "0.7",
+                    "--n-dof",
+                    "5",
+                    "--seed",
+                    "123",
                 ],
             )
             assert result.exit_code == 0, result.output
@@ -200,10 +216,19 @@ class TestBenchmarkCommand:
 
     def test_benchmark_error_handling(self, runner):
         """Test that benchmark handles algorithm errors gracefully."""
-        with patch("mmr_elites.algorithms.run_mmr_elites", side_effect=RuntimeError("test error")), \
-             patch("mmr_elites.algorithms.run_map_elites", side_effect=RuntimeError("test error")), \
-             patch("mmr_elites.algorithms.run_cvt_map_elites", side_effect=RuntimeError("test error")), \
-             patch("mmr_elites.algorithms.run_random_search", side_effect=RuntimeError("test error")):
+        with patch(
+            "mmr_elites.algorithms.run_mmr_elites",
+            side_effect=RuntimeError("test error"),
+        ), patch(
+            "mmr_elites.algorithms.run_map_elites",
+            side_effect=RuntimeError("test error"),
+        ), patch(
+            "mmr_elites.algorithms.run_cvt_map_elites",
+            side_effect=RuntimeError("test error"),
+        ), patch(
+            "mmr_elites.algorithms.run_random_search",
+            side_effect=RuntimeError("test error"),
+        ):
             with tempfile.TemporaryDirectory() as tmpdir:
                 result = runner.invoke(
                     main,
@@ -215,7 +240,9 @@ class TestBenchmarkCommand:
 
 class TestCompareCommand:
     def test_compare(self, runner):
-        with patch("experiments.dimensionality_scaling.run_dimensionality_scaling") as mock_fn:
+        with patch(
+            "experiments.dimensionality_scaling.run_dimensionality_scaling"
+        ) as mock_fn:
             result = runner.invoke(
                 main,
                 ["compare", "--dimensions", "5", "--seeds", "1", "--generations", "10"],

@@ -1,16 +1,17 @@
 """Tests for statistics module."""
 
-import numpy as np
-import pytest
 from unittest.mock import MagicMock
 
+import numpy as np
+import pytest
+
 from mmr_elites.utils.statistics import (
-    compute_confidence_interval,
-    wilcoxon_signed_rank_test,
-    mann_whitney_u_test,
     cohens_d,
     compute_all_statistics,
+    compute_confidence_interval,
     format_results_table,
+    mann_whitney_u_test,
+    wilcoxon_signed_rank_test,
 )
 
 
@@ -168,9 +169,7 @@ class TestComputeAllStatistics:
     def test_missing_baseline(self):
         results = {
             "Alg1": [
-                MagicMock(
-                    final_metrics={"qd_score_at_budget": 10, "qd_score": 10}
-                )
+                MagicMock(final_metrics={"qd_score_at_budget": 10, "qd_score": 10})
             ]
         }
         stats = compute_all_statistics(results, baseline="NonExistent")
@@ -234,16 +233,25 @@ class TestFormatResultsTable:
 
     def test_custom_metrics(self):
         results = {
-            "Alg1": [
-                MagicMock(final_metrics={"qd_score": 100, "max_fitness": 0.9})
-            ],
+            "Alg1": [MagicMock(final_metrics={"qd_score": 100, "max_fitness": 0.9})],
         }
         table = format_results_table(results, metrics=["qd_score", "max_fitness"])
         assert "qd_score" in table
         assert "max_fitness" in table
 
     def test_empty_runs_skipped(self):
-        results = {"Alg1": [], "Alg2": [MagicMock(final_metrics={"qd_score_at_budget": 10, "mean_fitness": 0.5, "uniformity_cv": 0.1})]}
+        results = {
+            "Alg1": [],
+            "Alg2": [
+                MagicMock(
+                    final_metrics={
+                        "qd_score_at_budget": 10,
+                        "mean_fitness": 0.5,
+                        "uniformity_cv": 0.1,
+                    }
+                )
+            ],
+        }
         table = format_results_table(results)
         assert "Alg1" not in table
         assert "Alg2" in table
@@ -251,7 +259,13 @@ class TestFormatResultsTable:
     def test_dict_results(self):
         results = {
             "Alg1": [
-                {"final_metrics": {"qd_score_at_budget": 10, "mean_fitness": 0.5, "uniformity_cv": 0.1}}
+                {
+                    "final_metrics": {
+                        "qd_score_at_budget": 10,
+                        "mean_fitness": 0.5,
+                        "uniformity_cv": 0.1,
+                    }
+                }
             ]
         }
         table = format_results_table(results)

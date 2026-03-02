@@ -23,14 +23,15 @@ Usage:
     python main_comparison_20d.py --seeds 5    # Custom seeds
 """
 
-import numpy as np
+import argparse
 import json
 import pickle
-import argparse
+import sys
+import time
 from pathlib import Path
 from typing import Dict, List
-import time
-import sys
+
+import numpy as np
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent))
@@ -38,6 +39,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 # Try to import Rust backend
 try:
     import mmr_elites_rs
+
     RUST_AVAILABLE = True
 except ImportError:
     print("⚠️  Rust backend not found. Run: maturin develop --release")
@@ -48,48 +50,54 @@ except ImportError:
 # Task Definition
 # =============================================================================
 
+
 class Arm20HighDimTask:
     """20-DOF Arm with 20D behavior descriptor (joint angles)."""
-    
+
     def __init__(self, target_pos=(0.8, 0.0)):
         self.dof = 20
         self.link_length = 1.0 / self.dof
         self.target_pos = np.array(target_pos)
         self.box_x = [0.5, 0.55]
         self.box_y = [-0.25, 0.25]
-    
+
     def forward_kinematics_batch(self, joints):
         angles = np.cumsum(joints, axis=1)
         dx = self.link_length * np.cos(angles)
         dy = self.link_length * np.sin(angles)
         return np.stack([np.cumsum(dx, axis=1), np.cumsum(dy, axis=1)], axis=2)
-    
+
     def check_collisions_batch(self, joint_coords):
         batch_size = joint_coords.shape[0]
         origin = np.zeros((batch_size, 1, 2))
         points = np.concatenate([origin, joint_coords], axis=1)
-        
+
         p_in_x = (points[:, :, 0] > self.box_x[0]) & (points[:, :, 0] < self.box_x[1])
         p_in_y = (points[:, :, 1] > self.box_y[0]) & (points[:, :, 1] < self.box_y[1])
         any_inside = np.any(p_in_x & p_in_y, axis=1)
-        
+
         A, B = points[:, :-1, :], points[:, 1:, :]
-        Ax, Ay, Bx, By = A[:,:,0], A[:,:,1], B[:,:,0], B[:,:,1]
+        Ax, Ay, Bx, By = A[:, :, 0], A[:, :, 1], B[:, :, 0], B[:, :, 1]
         dx, dy = Bx - Ax, By - Ay
         dx = np.where(np.abs(dx) < 1e-9, 1e-9, dx)
         dy = np.where(np.abs(dy) < 1e-9, 1e-9, dy)
-        
+
         def check_v(wx, ymin, ymax):
             t = (wx - Ax) / dx
-            return (t >= 0) & (t <= 1) & (Ay + t*dy >= ymin) & (Ay + t*dy <= ymax)
+            return (t >= 0) & (t <= 1) & (Ay + t * dy >= ymin) & (Ay + t * dy <= ymax)
+
         def check_h(wy, xmin, xmax):
             t = (wy - Ay) / dy
-            return (t >= 0) & (t <= 1) & (Ax + t*dx >= xmin) & (Ax + t*dx <= xmax)
-        
-        hit = check_v(self.box_x[0], *self.box_y) | check_v(self.box_x[1], *self.box_y) | \
-              check_h(self.box_y[0], *self.box_x) | check_h(self.box_y[1], *self.box_x)
+            return (t >= 0) & (t <= 1) & (Ax + t * dx >= xmin) & (Ax + t * dx <= xmax)
+
+        hit = (
+            check_v(self.box_x[0], *self.box_y)
+            | check_v(self.box_x[1], *self.box_y)
+            | check_h(self.box_y[0], *self.box_x)
+            | check_h(self.box_y[1], *self.box_x)
+        )
         return any_inside | np.any(hit, axis=1)
-    
+
     def evaluate(self, genomes):
         jc = self.forward_kinematics_batch(genomes)
         tips = jc[:, -1, :]
@@ -103,31 +111,38 @@ class Arm20HighDimTask:
 # Metrics
 # =============================================================================
 
+
 def compute_metrics(fitness: np.ndarray, descriptors: np.ndarray) -> Dict[str, float]:
     """Compute QD metrics."""
-    from scipy.spatial.distance import cdist
     from scipy.spatial import cKDTree
-    
+    from scipy.spatial.distance import cdist
+
     n = len(fitness)
     if n == 0:
-        return {"qd_score": 0, "max_fitness": 0, "mean_fitness": 0, 
-                "mean_pairwise_distance": 0, "uniformity_cv": 0, "archive_size": 0}
-    
+        return {
+            "qd_score": 0,
+            "max_fitness": 0,
+            "mean_fitness": 0,
+            "mean_pairwise_distance": 0,
+            "uniformity_cv": 0,
+            "archive_size": 0,
+        }
+
     # Basic metrics
     qd_score = float(np.sum(fitness))
     max_fit = float(np.max(fitness))
     mean_fit = float(np.mean(fitness))
-    
+
     # Diversity metrics
     if n > 1:
         dists = cdist(descriptors, descriptors)
         mpd = float(np.mean(dists[np.triu_indices(n, k=1)]))
-        
+
         # Uniformity (CV of k-NN distances)
         k = min(5, n - 1)
         if k > 0:
             tree = cKDTree(descriptors)
-            knn_dists, _ = tree.query(descriptors, k=k+1)
+            knn_dists, _ = tree.query(descriptors, k=k + 1)
             mean_knn = np.mean(knn_dists[:, 1:], axis=1)
             cv = np.std(mean_knn) / (np.mean(mean_knn) + 1e-10)
         else:
@@ -135,7 +150,7 @@ def compute_metrics(fitness: np.ndarray, descriptors: np.ndarray) -> Dict[str, f
     else:
         mpd = 0.0
         cv = 0.0
-    
+
     return {
         "qd_score": qd_score,
         "max_fitness": max_fit,
@@ -150,46 +165,63 @@ def compute_metrics(fitness: np.ndarray, descriptors: np.ndarray) -> Dict[str, f
 # Algorithms
 # =============================================================================
 
-def run_mmr_elites_experiment(task, generations, archive_size, batch_size, mutation_sigma, 
-                lambda_val, seed, log_interval=100) -> Dict:
+
+def run_mmr_elites_experiment(
+    task,
+    generations,
+    archive_size,
+    batch_size,
+    mutation_sigma,
+    lambda_val,
+    seed,
+    log_interval=100,
+) -> Dict:
     """Run MMR-Elites algorithm."""
     if not RUST_AVAILABLE:
         raise RuntimeError("Rust backend required")
-    
+
     np.random.seed(seed)
     selector = mmr_elites_rs.MMRSelector(archive_size, lambda_val)
-    
+
     # Initialize
     archive = np.random.uniform(-np.pi, np.pi, (archive_size, 20))
     fit, desc = task.evaluate(archive)
     idx = selector.select(fit, desc)
     archive, fit, desc = archive[idx], fit[idx], desc[idx]
-    
-    history = {"generation": [], "qd_score": [], "max_fitness": [], 
-               "mean_pairwise_distance": [], "uniformity_cv": []}
-    
+
+    history = {
+        "generation": [],
+        "qd_score": [],
+        "max_fitness": [],
+        "mean_pairwise_distance": [],
+        "uniformity_cv": [],
+    }
+
     start = time.time()
-    
+
     for gen in range(1, generations + 1):
         parents = archive[np.random.randint(0, len(archive), batch_size)]
-        offspring = np.clip(parents + np.random.normal(0, mutation_sigma, (batch_size, 20)), 
-                           -np.pi, np.pi)
+        offspring = np.clip(
+            parents + np.random.normal(0, mutation_sigma, (batch_size, 20)),
+            -np.pi,
+            np.pi,
+        )
         off_fit, off_desc = task.evaluate(offspring)
-        
+
         pool = np.vstack([archive, offspring])
         pool_fit = np.concatenate([fit, off_fit])
         pool_desc = np.vstack([desc, off_desc])
-        
+
         idx = selector.select(pool_fit, pool_desc)
         archive, fit, desc = pool[idx], pool_fit[idx], pool_desc[idx]
-        
+
         if gen % log_interval == 0:
             m = compute_metrics(fit, desc)
             for k in history:
                 if k != "generation":
                     history[k].append(m[k])
             history["generation"].append(gen)
-    
+
     return {
         "algorithm": "MMR-Elites",
         "seed": seed,
@@ -201,17 +233,24 @@ def run_mmr_elites_experiment(task, generations, archive_size, batch_size, mutat
     }
 
 
-def run_map_elites(task, generations, batch_size, mutation_sigma, seed, 
-                   bins_per_dim=3, log_interval=100) -> Dict:
+def run_map_elites(
+    task,
+    generations,
+    batch_size,
+    mutation_sigma,
+    seed,
+    bins_per_dim=3,
+    log_interval=100,
+) -> Dict:
     """Run sparse MAP-Elites (demonstrates curse of dimensionality)."""
     np.random.seed(seed)
-    
+
     def get_cell(desc):
         idx = (desc * bins_per_dim).astype(int)
         return tuple(np.clip(idx, 0, bins_per_dim - 1))
-    
+
     archive = {}
-    
+
     # Initialize
     init_pop = np.random.uniform(-np.pi, np.pi, (batch_size * 5, 20))
     fit, desc = task.evaluate(init_pop)
@@ -219,25 +258,33 @@ def run_map_elites(task, generations, batch_size, mutation_sigma, seed,
         cell = get_cell(desc[i])
         if cell not in archive or fit[i] > archive[cell][1]:
             archive[cell] = (init_pop[i].copy(), fit[i], desc[i].copy())
-    
-    history = {"generation": [], "qd_score": [], "max_fitness": [], 
-               "mean_pairwise_distance": [], "uniformity_cv": [], "archive_size": []}
-    
+
+    history = {
+        "generation": [],
+        "qd_score": [],
+        "max_fitness": [],
+        "mean_pairwise_distance": [],
+        "uniformity_cv": [],
+        "archive_size": [],
+    }
+
     start = time.time()
-    
+
     for gen in range(1, generations + 1):
         keys = list(archive.keys())
-        parents = np.array([archive[keys[np.random.randint(len(keys))]][0] 
-                           for _ in range(batch_size)])
-        offspring = np.clip(parents + np.random.normal(0, mutation_sigma, parents.shape),
-                           -np.pi, np.pi)
+        parents = np.array(
+            [archive[keys[np.random.randint(len(keys))]][0] for _ in range(batch_size)]
+        )
+        offspring = np.clip(
+            parents + np.random.normal(0, mutation_sigma, parents.shape), -np.pi, np.pi
+        )
         off_fit, off_desc = task.evaluate(offspring)
-        
+
         for i in range(len(offspring)):
             cell = get_cell(off_desc[i])
             if cell not in archive or off_fit[i] > archive[cell][1]:
                 archive[cell] = (offspring[i].copy(), off_fit[i], off_desc[i].copy())
-        
+
         if gen % log_interval == 0:
             all_fit = np.array([v[1] for v in archive.values()])
             all_desc = np.array([v[2] for v in archive.values()])
@@ -247,10 +294,10 @@ def run_map_elites(task, generations, batch_size, mutation_sigma, seed,
                     history[k].append(m[k])
             history["generation"].append(gen)
             history["archive_size"].append(len(archive))
-    
+
     all_fit = np.array([v[1] for v in archive.values()])
     all_desc = np.array([v[2] for v in archive.values()])
-    
+
     return {
         "algorithm": "MAP-Elites",
         "seed": seed,
@@ -262,32 +309,38 @@ def run_map_elites(task, generations, batch_size, mutation_sigma, seed,
     }
 
 
-def run_cvt_map_elites(task, n_niches, generations, batch_size, mutation_sigma, 
-                       seed, log_interval=100) -> Dict:
+def run_cvt_map_elites(
+    task, n_niches, generations, batch_size, mutation_sigma, seed, log_interval=100
+) -> Dict:
     """Run CVT-MAP-Elites."""
     from scipy.spatial import cKDTree
-    
+
     np.random.seed(seed)
-    
+
     # Compute CVT centroids
     print(f"    Computing {n_niches} CVT centroids...", end=" ", flush=True)
     samples = np.random.uniform(0, 1, (50000, 20))
     try:
         from sklearn.cluster import KMeans
-        centroids = KMeans(n_clusters=n_niches, random_state=seed, n_init=1).fit(samples).cluster_centers_
+
+        centroids = (
+            KMeans(n_clusters=n_niches, random_state=seed, n_init=1)
+            .fit(samples)
+            .cluster_centers_
+        )
     except ImportError:
         # Simple fallback
         idx = np.random.choice(len(samples), n_niches, replace=False)
         centroids = samples[idx]
     print("Done.")
-    
+
     tree = cKDTree(centroids)
     archive = {}
-    
+
     def get_niche(desc):
         _, idx = tree.query(desc)
         return idx
-    
+
     # Initialize
     init_pop = np.random.uniform(-np.pi, np.pi, (batch_size * 5, 20))
     fit, desc = task.evaluate(init_pop)
@@ -295,25 +348,33 @@ def run_cvt_map_elites(task, n_niches, generations, batch_size, mutation_sigma,
         niche = get_niche(desc[i])
         if niche not in archive or fit[i] > archive[niche][1]:
             archive[niche] = (init_pop[i].copy(), fit[i], desc[i].copy())
-    
-    history = {"generation": [], "qd_score": [], "max_fitness": [], 
-               "mean_pairwise_distance": [], "uniformity_cv": [], "archive_size": []}
-    
+
+    history = {
+        "generation": [],
+        "qd_score": [],
+        "max_fitness": [],
+        "mean_pairwise_distance": [],
+        "uniformity_cv": [],
+        "archive_size": [],
+    }
+
     start = time.time()
-    
+
     for gen in range(1, generations + 1):
         keys = list(archive.keys())
-        parents = np.array([archive[keys[np.random.randint(len(keys))]][0] 
-                           for _ in range(batch_size)])
-        offspring = np.clip(parents + np.random.normal(0, mutation_sigma, parents.shape),
-                           -np.pi, np.pi)
+        parents = np.array(
+            [archive[keys[np.random.randint(len(keys))]][0] for _ in range(batch_size)]
+        )
+        offspring = np.clip(
+            parents + np.random.normal(0, mutation_sigma, parents.shape), -np.pi, np.pi
+        )
         off_fit, off_desc = task.evaluate(offspring)
-        
+
         for i in range(len(offspring)):
             niche = get_niche(off_desc[i])
             if niche not in archive or off_fit[i] > archive[niche][1]:
                 archive[niche] = (offspring[i].copy(), off_fit[i], off_desc[i].copy())
-        
+
         if gen % log_interval == 0:
             all_fit = np.array([v[1] for v in archive.values()])
             all_desc = np.array([v[2] for v in archive.values()])
@@ -323,10 +384,10 @@ def run_cvt_map_elites(task, n_niches, generations, batch_size, mutation_sigma,
                     history[k].append(m[k])
             history["generation"].append(gen)
             history["archive_size"].append(len(archive))
-    
+
     all_fit = np.array([v[1] for v in archive.values()])
     all_desc = np.array([v[2] for v in archive.values()])
-    
+
     return {
         "algorithm": "CVT-MAP-Elites",
         "seed": seed,
@@ -342,6 +403,7 @@ def run_cvt_map_elites(task, n_niches, generations, batch_size, mutation_sigma,
 # Main Experiment
 # =============================================================================
 
+
 def run_experiment(
     n_seeds: int = 10,
     generations: int = 2000,
@@ -352,67 +414,86 @@ def run_experiment(
     output_dir: str = "results/main_comparison_20d",
 ):
     """Run the complete comparison experiment."""
-    
+
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
-    
+
     task = Arm20HighDimTask()
-    
-    print("="*70)
+
+    print("=" * 70)
     print("MAIN EXPERIMENT: 20D Behavior Descriptor Comparison")
-    print("="*70)
+    print("=" * 70)
     print(f"Seeds: {n_seeds}")
     print(f"Generations: {generations}")
     print(f"Archive Size: {archive_size}")
     print(f"Lambda (MMR): {lambda_val}")
-    print("="*70)
-    
+    print("=" * 70)
+
     all_results = {"MMR-Elites": [], "MAP-Elites": [], "CVT-MAP-Elites": []}
-    
+
     for seed in range(n_seeds):
         print(f"\n{'='*50}")
         print(f"SEED {seed + 1}/{n_seeds}")
-        print("="*50)
-        
+        print("=" * 50)
+
         if RUST_AVAILABLE:
             print("  Running MMR-Elites...", end=" ", flush=True)
-            r = run_mmr_elites_experiment(task, generations, archive_size, batch_size, 
-                           mutation_sigma, lambda_val, seed)
+            r = run_mmr_elites_experiment(
+                task,
+                generations,
+                archive_size,
+                batch_size,
+                mutation_sigma,
+                lambda_val,
+                seed,
+            )
             all_results["MMR-Elites"].append(r)
-            print(f"QD={r['final_metrics']['qd_score']:.2f}, "
-                  f"MaxFit={r['final_metrics']['max_fitness']:.4f}")
-        
+            print(
+                f"QD={r['final_metrics']['qd_score']:.2f}, "
+                f"MaxFit={r['final_metrics']['max_fitness']:.4f}"
+            )
+
         print("  Running MAP-Elites...", end=" ", flush=True)
         r = run_map_elites(task, generations, batch_size, mutation_sigma, seed)
         all_results["MAP-Elites"].append(r)
-        print(f"QD={r['final_metrics']['qd_score']:.2f}, "
-              f"Archive={r['final_metrics']['archive_size']}")
-        
+        print(
+            f"QD={r['final_metrics']['qd_score']:.2f}, "
+            f"Archive={r['final_metrics']['archive_size']}"
+        )
+
         print("  Running CVT-MAP-Elites...")
-        r = run_cvt_map_elites(task, archive_size, generations, batch_size, 
-                              mutation_sigma, seed)
+        r = run_cvt_map_elites(
+            task, archive_size, generations, batch_size, mutation_sigma, seed
+        )
         all_results["CVT-MAP-Elites"].append(r)
-        print(f"    QD={r['final_metrics']['qd_score']:.2f}, "
-              f"Archive={r['final_metrics']['archive_size']}")
-    
+        print(
+            f"    QD={r['final_metrics']['qd_score']:.2f}, "
+            f"Archive={r['final_metrics']['archive_size']}"
+        )
+
     # Save results
     with open(output_path / "all_results.pkl", "wb") as f:
         pickle.dump(all_results, f)
-    
+
     # Print summary
-    print("\n" + "="*90)
+    print("\n" + "=" * 90)
     print("FINAL RESULTS (mean ± std)")
-    print("="*90)
-    
-    metrics = ["qd_score", "max_fitness", "mean_pairwise_distance", 
-               "uniformity_cv", "archive_size"]
-    
+    print("=" * 90)
+
+    metrics = [
+        "qd_score",
+        "max_fitness",
+        "mean_pairwise_distance",
+        "uniformity_cv",
+        "archive_size",
+    ]
+
     header = f"{'Metric':<25}"
     for alg in ["MMR-Elites", "MAP-Elites", "CVT-MAP-Elites"]:
         header += f" | {alg:<20}"
     print(header)
-    print("-"*90)
-    
+    print("-" * 90)
+
     summary = {}
     for m in metrics:
         row = f"{m:<25}"
@@ -426,71 +507,93 @@ def run_experiment(
             else:
                 row += f" | {'N/A':^20}"
         print(row)
-    
+
     with open(output_path / "summary.json", "w") as f:
         json.dump(summary, f, indent=2)
-    
+
     # Add statistical analysis
     from mmr_elites.utils.statistics import compute_all_statistics
-    
-    print("\n" + "="*90)
+
+    print("\n" + "=" * 90)
     print("STATISTICAL ANALYSIS (vs MAP-Elites)")
-    print("="*90)
-    
+    print("=" * 90)
+
     try:
-        stats = compute_all_statistics(all_results, metric="qd_score", baseline="MAP-Elites")
+        stats = compute_all_statistics(
+            all_results, metric="qd_score", baseline="MAP-Elites"
+        )
         for alg, s in stats.items():
-            if alg.startswith("_"): continue
-            print(f"{alg:20s}: {s['mean']:.2f} ± {s['std']:.2f} (95% CI: [{s['ci_95_low']:.2f}, {s['ci_95_high']:.2f}])")
-        
+            if alg.startswith("_"):
+                continue
+            print(
+                f"{alg:20s}: {s['mean']:.2f} ± {s['std']:.2f} (95% CI: [{s['ci_95_low']:.2f}, {s['ci_95_high']:.2f}])"
+            )
+
         if "_comparisons" in stats:
             print("\nSignificance vs MAP-Elites:")
             for alg, comp in stats["_comparisons"].items():
-                sig = "***" if comp["significant_001"] else ("*" if comp["significant_005"] else "")
-                print(f"  {alg:18s}: d={comp['cohens_d']:.2f}, p={comp['p_value']:.4f} {sig}")
+                sig = (
+                    "***"
+                    if comp["significant_001"]
+                    else ("*" if comp["significant_005"] else "")
+                )
+                print(
+                    f"  {alg:18s}: d={comp['cohens_d']:.2f}, p={comp['p_value']:.4f} {sig}"
+                )
     except Exception as e:
         print(f"⚠️  Statistical analysis failed: {e}")
 
     # Generate plots
     try:
         import matplotlib.pyplot as plt
-        
+
         # Learning curves
         fig, axes = plt.subplots(2, 2, figsize=(14, 10))
         axes = axes.flatten()
-        
-        metrics_plot = ["qd_score", "max_fitness", "mean_pairwise_distance", "archive_size"]
-        colors = {"MMR-Elites": "#0072B2", "MAP-Elites": "#D55E00", "CVT-MAP-Elites": "#009E73"}
-        
+
+        metrics_plot = [
+            "qd_score",
+            "max_fitness",
+            "mean_pairwise_distance",
+            "archive_size",
+        ]
+        colors = {
+            "MMR-Elites": "#0072B2",
+            "MAP-Elites": "#D55E00",
+            "CVT-MAP-Elites": "#009E73",
+        }
+
         for ax, metric in zip(axes, metrics_plot):
             for alg in ["MMR-Elites", "MAP-Elites", "CVT-MAP-Elites"]:
                 if not all_results[alg]:
                     continue
                 if metric not in all_results[alg][0]["history"]:
                     continue
-                
+
                 gens = all_results[alg][0]["history"]["generation"]
                 vals = np.array([r["history"][metric] for r in all_results[alg]])
                 mean, std = np.mean(vals, axis=0), np.std(vals, axis=0)
-                
-                ax.fill_between(gens, mean - std, mean + std, alpha=0.2, color=colors[alg])
+
+                ax.fill_between(
+                    gens, mean - std, mean + std, alpha=0.2, color=colors[alg]
+                )
                 ax.plot(gens, mean, label=alg, color=colors[alg], linewidth=2)
-            
+
             ax.set_xlabel("Generation")
             ax.set_ylabel(metric.replace("_", " ").title())
             ax.legend()
             ax.grid(True, alpha=0.3)
-        
+
         plt.tight_layout()
         plt.savefig(output_path / "learning_curves.png", dpi=150)
         plt.savefig(output_path / "learning_curves.pdf")
         print(f"\n📈 Saved plots to {output_path}")
-        
+
     except ImportError:
         print("\n⚠️  Matplotlib not available, skipping plots")
-    
+
     print(f"\n✅ Results saved to {output_path}")
-    
+
     return all_results
 
 
@@ -499,17 +602,23 @@ def run_experiment(
 # =============================================================================
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="MMR-Elites Main Comparison Experiment")
-    parser.add_argument("--quick", action="store_true", help="Quick test (2 seeds, 500 gens)")
-    parser.add_argument("--full", action="store_true", help="Full experiment (10 seeds, 2000 gens)")
+    parser = argparse.ArgumentParser(
+        description="MMR-Elites Main Comparison Experiment"
+    )
+    parser.add_argument(
+        "--quick", action="store_true", help="Quick test (2 seeds, 500 gens)"
+    )
+    parser.add_argument(
+        "--full", action="store_true", help="Full experiment (10 seeds, 2000 gens)"
+    )
     parser.add_argument("--seeds", type=int, default=5, help="Number of seeds")
     parser.add_argument("--generations", type=int, default=1000, help="Generations")
     parser.add_argument("--archive-size", type=int, default=1000, help="Archive size")
     parser.add_argument("--lambda", type=float, default=0.5, dest="lambda_val")
     parser.add_argument("--output-dir", default="results/main_comparison_20d")
-    
+
     args = parser.parse_args()
-    
+
     if args.quick:
         run_experiment(n_seeds=2, generations=500, output_dir=args.output_dir)
     elif args.full:

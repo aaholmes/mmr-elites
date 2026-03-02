@@ -15,25 +15,31 @@ Usage:
 """
 
 import argparse
-import pickle
 import json
-from pathlib import Path
+import pickle
 from datetime import datetime
+from pathlib import Path
 
-from experiments.dimensionality_scaling import run_dimensionality_scaling
-from experiments.lambda_ablation import run_lambda_ablation
-from experiments.distance_comparison import run_distance_comparison
 from experiments.archive_size_ablation import run_archive_size_ablation
+from experiments.dimensionality_scaling import run_dimensionality_scaling
+from experiments.distance_comparison import run_distance_comparison
+from experiments.lambda_ablation import run_lambda_ablation
 
 
 def main():
     parser = argparse.ArgumentParser(description="MMR-Elites Experiment Suite")
     parser.add_argument("--quick", action="store_true", help="Quick test mode")
     parser.add_argument("--full", action="store_true", help="Full experiment mode")
-    parser.add_argument("--scaling", action="store_true", help="Run dimensionality scaling")
+    parser.add_argument(
+        "--scaling", action="store_true", help="Run dimensionality scaling"
+    )
     parser.add_argument("--ablation", action="store_true", help="Run lambda ablation")
-    parser.add_argument("--distance", action="store_true", help="Run distance comparison")
-    parser.add_argument("--archsize", action="store_true", help="Run archive size ablation")
+    parser.add_argument(
+        "--distance", action="store_true", help="Run distance comparison"
+    )
+    parser.add_argument(
+        "--archsize", action="store_true", help="Run archive size ablation"
+    )
     parser.add_argument("--output-dir", default="results", help="Output directory")
 
     args = parser.parse_args()
@@ -58,13 +64,13 @@ def main():
     run_specific = args.scaling or args.ablation or args.distance or args.archsize
     run_all = not run_specific
 
-    print("="*70)
+    print("=" * 70)
     print("MMR-Elites Experiment Suite")
-    print("="*70)
+    print("=" * 70)
     print(f"Seeds: {n_seeds}")
     print(f"Generations: {generations}")
     print(f"Output: {run_dir}")
-    print("="*70)
+    print("=" * 70)
 
     results = {}
 

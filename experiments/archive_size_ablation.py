@@ -9,14 +9,15 @@ dilute fitness pressure. There should be diminishing returns beyond
 a certain K for a given evaluation budget.
 """
 
-import numpy as np
-import pickle
 import json
+import pickle
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from mmr_elites.tasks.arm import ArmTask
+import numpy as np
+
 from mmr_elites.algorithms import run_mmr_elites
+from mmr_elites.tasks.arm import ArmTask
 
 
 def run_archive_size_ablation(
@@ -65,7 +66,7 @@ def run_archive_size_ablation(
     for k in archive_sizes:
         print(f"\n{'='*50}")
         print(f"K = {k}")
-        print("="*50)
+        print("=" * 50)
 
         for seed in range(n_seeds):
             print(f"  Seed {seed + 1}/{n_seeds}...", end=" ", flush=True)
@@ -81,9 +82,11 @@ def run_archive_size_ablation(
             )
             all_results[k].append(result)
 
-            print(f"QD@K={result['final_metrics']['qd_score_at_budget']:.2f}, "
-                  f"CV={result['final_metrics']['uniformity_cv']:.3f}, "
-                  f"MeanFit={result['final_metrics']['mean_fitness']:.4f}")
+            print(
+                f"QD@K={result['final_metrics']['qd_score_at_budget']:.2f}, "
+                f"CV={result['final_metrics']['uniformity_cv']:.3f}, "
+                f"MeanFit={result['final_metrics']['mean_fitness']:.4f}"
+            )
 
     # Save results
     with open(output_dir / "results.pkl", "wb") as f:
@@ -93,8 +96,13 @@ def run_archive_size_ablation(
     summary = {}
     for k in archive_sizes:
         metrics = {}
-        for metric in ["qd_score_at_budget", "mean_fitness", "max_fitness",
-                        "uniformity_cv", "mean_pairwise_distance"]:
+        for metric in [
+            "qd_score_at_budget",
+            "mean_fitness",
+            "max_fitness",
+            "uniformity_cv",
+            "mean_pairwise_distance",
+        ]:
             values = [r["final_metrics"][metric] for r in all_results[k]]
             metrics[metric] = {
                 "mean": float(np.mean(values)),
@@ -106,19 +114,21 @@ def run_archive_size_ablation(
         json.dump(summary, f, indent=2)
 
     # Print summary
-    print("\n" + "="*90)
+    print("\n" + "=" * 90)
     print("SUMMARY")
-    print("="*90)
+    print("=" * 90)
     print(f"{'K':<8} | {'QD@K':<18} | {'Mean Fit':<18} | {'Uniformity CV':<18}")
-    print("-"*90)
+    print("-" * 90)
 
     for k in archive_sizes:
         qd = summary[str(k)]["qd_score_at_budget"]
         mf = summary[str(k)]["mean_fitness"]
         cv = summary[str(k)]["uniformity_cv"]
-        print(f"{k:<8} | {qd['mean']:>7.2f} +/- {qd['std']:<6.2f} | "
-              f"{mf['mean']:>7.4f} +/- {mf['std']:<6.4f} | "
-              f"{cv['mean']:>7.4f} +/- {cv['std']:<6.4f}")
+        print(
+            f"{k:<8} | {qd['mean']:>7.2f} +/- {qd['std']:<6.2f} | "
+            f"{mf['mean']:>7.4f} +/- {mf['std']:<6.4f} | "
+            f"{cv['mean']:>7.4f} +/- {cv['std']:<6.4f}"
+        )
 
     return all_results
 
@@ -127,10 +137,14 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Archive Size Ablation")
-    parser.add_argument("--quick", action="store_true",
-                        help="Quick test (2 seeds, 200 generations)")
-    parser.add_argument("--full", action="store_true",
-                        help="Full experiment (10 seeds, 2000 generations)")
+    parser.add_argument(
+        "--quick", action="store_true", help="Quick test (2 seeds, 200 generations)"
+    )
+    parser.add_argument(
+        "--full",
+        action="store_true",
+        help="Full experiment (10 seeds, 2000 generations)",
+    )
     args = parser.parse_args()
 
     if args.quick:

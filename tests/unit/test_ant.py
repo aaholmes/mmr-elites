@@ -1,10 +1,17 @@
 """Tests for ant task module."""
 
+from unittest.mock import MagicMock, patch
+
 import numpy as np
 import pytest
-from unittest.mock import patch, MagicMock
 
-from mmr_elites.tasks.ant import TanhMLP, AntTask, eval_one_ant, eval_one_ant_job, worker_init
+from mmr_elites.tasks.ant import (
+    AntTask,
+    TanhMLP,
+    eval_one_ant,
+    eval_one_ant_job,
+    worker_init,
+)
 
 
 class TestTanhMLP:
@@ -62,6 +69,7 @@ class TestEvalOneAnt:
     def test_eval_one_ant_no_env(self):
         """When _env is None, should return zero fitness and zero descriptors."""
         import mmr_elites.tasks.ant as ant_module
+
         original_env = ant_module._env
         ant_module._env = None
         try:
@@ -74,6 +82,7 @@ class TestEvalOneAnt:
     def test_eval_one_ant_job_unpacks(self):
         """eval_one_ant_job should unpack (genome, seed) tuple."""
         import mmr_elites.tasks.ant as ant_module
+
         original_env = ant_module._env
         ant_module._env = None
         try:
@@ -177,8 +186,9 @@ class TestAntTask:
         mock_env = MagicMock()
         mock_env.observation_space.shape = (27,)
         mock_env.action_space.shape = (8,)
-        with patch("mmr_elites.tasks.ant.GYM_AVAILABLE", True), \
-             patch("mmr_elites.tasks.ant.gym") as mock_gym:
+        with patch("mmr_elites.tasks.ant.GYM_AVAILABLE", True), patch(
+            "mmr_elites.tasks.ant.gym"
+        ) as mock_gym:
             mock_gym.make.return_value = mock_env
             task = AntTask(workers=2)
             assert task.input_dim == 27
@@ -189,8 +199,9 @@ class TestAntTask:
 
     def test_start_creates_executor(self):
         """Test that start() creates a ProcessPoolExecutor when gym is available."""
-        with patch("mmr_elites.tasks.ant.GYM_AVAILABLE", True), \
-             patch("mmr_elites.tasks.ant.ProcessPoolExecutor") as MockPPE:
+        with patch("mmr_elites.tasks.ant.GYM_AVAILABLE", True), patch(
+            "mmr_elites.tasks.ant.ProcessPoolExecutor"
+        ) as MockPPE:
             task = AntTask.__new__(AntTask)
             task.executor = None
             task.workers = 2
@@ -214,6 +225,7 @@ class TestAntTask:
                 # After start is called, set executor
                 def set_executor():
                     task.executor = mock_executor
+
                 mock_start.side_effect = set_executor
 
                 genomes = np.zeros((2, 100))
@@ -226,18 +238,23 @@ class TestAntTask:
 class TestWorkerInit:
     def test_worker_init_with_gym(self):
         import mmr_elites.tasks.ant as ant_module
+
         original_env = ant_module._env
         mock_env = MagicMock()
-        with patch("mmr_elites.tasks.ant.GYM_AVAILABLE", True), \
-             patch("mmr_elites.tasks.ant.gym") as mock_gym:
+        with patch("mmr_elites.tasks.ant.GYM_AVAILABLE", True), patch(
+            "mmr_elites.tasks.ant.gym"
+        ) as mock_gym:
             mock_gym.make.return_value = mock_env
             worker_init()
             assert ant_module._env is mock_env
-            mock_gym.make.assert_called_once_with("Ant-v4", terminate_when_unhealthy=False)
+            mock_gym.make.assert_called_once_with(
+                "Ant-v4", terminate_when_unhealthy=False
+            )
         ant_module._env = original_env
 
     def test_worker_init_without_gym(self):
         import mmr_elites.tasks.ant as ant_module
+
         original_env = ant_module._env
         ant_module._env = None
         with patch("mmr_elites.tasks.ant.GYM_AVAILABLE", False):
@@ -250,6 +267,7 @@ class TestEvalOneAntWithEnv:
     def test_eval_with_mock_env(self):
         """Test eval_one_ant with a mocked environment."""
         import mmr_elites.tasks.ant as ant_module
+
         original_env = ant_module._env
 
         mock_env = MagicMock()
@@ -276,6 +294,7 @@ class TestEvalOneAntWithEnv:
     def test_eval_truncated(self):
         """Test eval_one_ant when environment truncates."""
         import mmr_elites.tasks.ant as ant_module
+
         original_env = ant_module._env
 
         mock_env = MagicMock()

@@ -5,6 +5,7 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import matplotlib
+
 matplotlib.use("Agg")  # Non-interactive backend for testing
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,12 +14,12 @@ import pytest
 from mmr_elites.utils.visualization import (
     COLORS,
     LINESTYLES,
-    set_publication_style,
-    plot_learning_curves,
-    plot_final_metrics_bars,
-    plot_behavior_space_comparison,
     plot_arm_configurations,
+    plot_behavior_space_comparison,
+    plot_final_metrics_bars,
+    plot_learning_curves,
     save_figure,
+    set_publication_style,
 )
 
 
@@ -100,7 +101,9 @@ class TestPlotLearningCurves:
 
     def test_with_existing_axes(self, mock_results_objects):
         fig, ax = plt.subplots()
-        returned_ax = plot_learning_curves(mock_results_objects, metric="qd_score", ax=ax)
+        returned_ax = plot_learning_curves(
+            mock_results_objects, metric="qd_score", ax=ax
+        )
         assert returned_ax is ax
         plt.close("all")
 
@@ -162,16 +165,12 @@ class TestPlotFinalMetricsBars:
         plt.close("all")
 
     def test_custom_metrics(self, mock_results_objects):
-        fig = plot_final_metrics_bars(
-            mock_results_objects, metrics=["qd_score"]
-        )
+        fig = plot_final_metrics_bars(mock_results_objects, metrics=["qd_score"])
         assert fig is not None
         plt.close("all")
 
     def test_single_metric(self, mock_results_objects):
-        fig = plot_final_metrics_bars(
-            mock_results_objects, metrics=["max_fitness"]
-        )
+        fig = plot_final_metrics_bars(mock_results_objects, metrics=["max_fitness"])
         assert fig is not None
         plt.close("all")
 
