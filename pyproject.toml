@@ -36,5 +36,4 @@ profile = "black"
 
 [tool.maturin]
 features = ["pyo3/extension-module"]
-python-source = "mmr_elites"
 module-name = "mmr_elites_rs"
