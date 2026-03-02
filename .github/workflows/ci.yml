@@ -27,19 +27,27 @@ jobs:
         toolchain: stable
         override: true
     
-    - name: Install dependencies
+    - name: Create virtualenv and install dependencies
       run: |
+        python -m venv .venv
+        source .venv/bin/activate
         python -m pip install --upgrade pip
         pip install maturin pytest pytest-cov numpy scipy matplotlib scikit-learn click gymnasium
-    
+
     - name: Build Rust extension
-      run: maturin develop --release
-    
+      run: |
+        source .venv/bin/activate
+        maturin develop --release
+
     - name: Install package
-      run: pip install -e .
-    
+      run: |
+        source .venv/bin/activate
+        pip install -e .
+
     - name: Run tests
-      run: PYTHONPATH=. pytest tests/ -v --cov=mmr_elites --cov-report=xml
+      run: |
+        source .venv/bin/activate
+        PYTHONPATH=. pytest tests/ -v --cov=mmr_elites --cov-report=xml
     
     - name: Upload coverage
       uses: codecov/codecov-action@v3
