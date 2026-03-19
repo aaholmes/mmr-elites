@@ -4,8 +4,7 @@ MAP-Elites: Multi-dimensional Archive of Phenotypic Elites.
 Baseline algorithm for comparison.
 """
 
-import time
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Tuple
 
 import numpy as np
 

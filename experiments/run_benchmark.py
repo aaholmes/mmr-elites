@@ -14,7 +14,7 @@ import numpy as np
 from mmr_elites.algorithms.cvt_map_elites import run_cvt_map_elites
 from mmr_elites.algorithms.map_elites import run_map_elites
 from mmr_elites.algorithms.mmr_elites import run_mmr_elites
-from mmr_elites.algorithms.random_search import RandomSearch
+from mmr_elites.algorithms.random_search import run_random_search
 from mmr_elites.tasks.arm import ArmTask
 from mmr_elites.tasks.rastrigin import RastriginTask
 from mmr_elites.utils.config import ExperimentConfig
@@ -73,30 +73,16 @@ def run_experiment(config: ExperimentConfig):
             mutation_sigma=config.mutation_sigma,
             seed=config.seed,
             log_interval=config.log_interval,
-            descriptor_dim=task.desc_dim,
         )
     elif config.algorithm == "random":
-        from mmr_elites.algorithms.random_search import RandomSearch
-
-        alg = RandomSearch(archive_size=config.archive_size)
-        res = alg.run(
+        result = run_random_search(
             task=task,
+            archive_size=config.archive_size,
             generations=config.generations,
             batch_size=config.batch_size,
-            mutation_sigma=config.mutation_sigma,
             seed=config.seed,
             log_interval=config.log_interval,
         )
-        result = {
-            "algorithm": res.algorithm,
-            "seed": res.seed,
-            "runtime": res.runtime,
-            "final_metrics": res.final_metrics,
-            "history": res.history,
-            "final_genomes": res.final_genomes,
-            "final_fitness": res.final_fitness,
-            "final_descriptors": res.final_descriptors,
-        }
     else:
         raise ValueError(f"Unknown algorithm: {config.algorithm}")
 

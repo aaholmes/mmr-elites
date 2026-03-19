@@ -2,9 +2,8 @@
 Ant Locomotion Task (MuJoCo).
 """
 
-import time
 from concurrent.futures import ProcessPoolExecutor
-from typing import Optional, Tuple
+from typing import Tuple
 
 import numpy as np
 

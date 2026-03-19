@@ -4,8 +4,7 @@ MMR-Elites: Maximum Marginal Relevance Selection of Elites.
 Core algorithm implementation.
 """
 
-import time
-from typing import Dict, Optional, Tuple
+from typing import Dict, Tuple
 
 import numpy as np
 

@@ -26,10 +26,18 @@ def naive_greedy_mmr(
     Reference implementation: O(N * K^2) naive greedy MMR.
 
     This is the ground truth for verifying the optimized Rust implementation.
+    Normalizes fitness to [0, 1] to match the Rust backend.
     """
     n = len(fitness)
     if n <= target_k:
         return np.arange(n)
+
+    # Normalize fitness to [0, 1]
+    f_min, f_max = fitness.min(), fitness.max()
+    if f_max - f_min > 1e-10:
+        f_norm = (fitness - f_min) / (f_max - f_min)
+    else:
+        f_norm = np.full(n, 0.5)
 
     selected = []
     remaining = set(range(n))
@@ -50,7 +58,7 @@ def naive_greedy_mmr(
                 [np.linalg.norm(descriptors[idx] - descriptors[s]) for s in selected]
             )
 
-            score = (1 - lambda_val) * fitness[idx] + lambda_val * d_min
+            score = (1 - lambda_val) * f_norm[idx] + lambda_val * d_min
 
             if score > best_score:
                 best_score = score
@@ -208,6 +216,57 @@ class TestMMRSelectorEdgeCases:
         # Top 5 by fitness should be selected
         expected = np.argsort(fitness)[-5:][::-1]
         np.testing.assert_array_equal(result, expected)
+
+
+@pytest.mark.rust
+class TestMMRSelectorNormalization:
+    """Tests for fitness normalization in the Rust selector."""
+
+    def test_fitness_normalization(self):
+        """Selection should be invariant to fitness scale/shift.
+
+        Passing fitness [100, 200, 300] should produce the same selection
+        as [0.0, 0.5, 1.0] (with proportional descriptors), because both
+        normalize to the same relative values.
+        """
+        if not RUST_AVAILABLE:
+            pytest.skip("Rust backend not available")
+
+        np.random.seed(42)
+        n, k = 50, 10
+        descriptors = np.random.rand(n, 5).astype(np.float64)
+
+        # Fitness in [0, 1]
+        fitness_unit = np.random.rand(n).astype(np.float64)
+
+        # Same fitness scaled to [100, 200]
+        fitness_scaled = fitness_unit * 100 + 100
+
+        selector = mmr_elites_rs.MMRSelector(k, 0.5)
+        result_unit = selector.select(fitness_unit, descriptors)
+        result_scaled = selector.select(fitness_scaled, descriptors)
+
+        np.testing.assert_array_equal(
+            result_unit,
+            result_scaled,
+            err_msg="Selection should be invariant to linear fitness scaling",
+        )
+
+    def test_negative_fitness(self):
+        """Selector should handle negative fitness values without crashing."""
+        if not RUST_AVAILABLE:
+            pytest.skip("Rust backend not available")
+
+        n, k = 20, 5
+        fitness = np.array([-10, -5, 0, 5, 10] * 4, dtype=np.float64)
+        descriptors = np.random.rand(n, 3).astype(np.float64)
+
+        selector = mmr_elites_rs.MMRSelector(k, 0.5)
+        result = selector.select(fitness, descriptors)
+
+        assert len(result) == k
+        assert len(set(result)) == k  # All distinct
+        assert result[0] == np.argmax(fitness)  # Best fitness first
 
 
 @pytest.mark.rust

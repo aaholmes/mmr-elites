@@ -105,6 +105,20 @@ impl MMRSelector {
             return (0..n).collect();
         }
 
+        // Normalize fitness to [0, 1] so λ trades off comparable scales
+        let mut f_min = f64::INFINITY;
+        let mut f_max = f64::NEG_INFINITY;
+        for &val in fitness.iter() {
+            if val < f_min { f_min = val; }
+            if val > f_max { f_max = val; }
+        }
+        let f_range = f_max - f_min;
+        let f_norm: Vec<f64> = if f_range > 1e-10 {
+            fitness.iter().map(|&v| (v - f_min) / f_range).collect()
+        } else {
+            vec![0.5; n]
+        };
+
         let mut selected_indices = Vec::with_capacity(self.target_k);
         let mut archive_indices: Vec<usize> = Vec::with_capacity(self.target_k);
 
@@ -132,7 +146,7 @@ impl MMRSelector {
                 if i == best_idx {
                     return None;
                 }
-                
+
                 let current_desc = descriptors.row(i);
                 // Zero-Alloc Distance
                 let d = current_desc.iter()
@@ -140,7 +154,7 @@ impl MMRSelector {
                     .fold(0.0, |acc, (a, b)| acc + (a - b).powi(2))
                     .sqrt();
 
-                let score = (1.0 - lambda) * fitness[i] + lambda * d;
+                let score = (1.0 - lambda) * f_norm[i] + lambda * d;
 
                 Some(Candidate {
                     index: i,
@@ -187,8 +201,8 @@ impl MMRSelector {
                     top.cached_d_min = new_d_min;
                     top.checked_count = current_archive_len;
                     
-                    // Recalculate Score
-                    let new_score = (1.0 - lambda) * fitness[cand_idx] + lambda * new_d_min;
+                    // Recalculate Score (using normalized fitness)
+                    let new_score = (1.0 - lambda) * f_norm[cand_idx] + lambda * new_d_min;
                     top.mmr_score = Float(new_score);
 
                     // PEEK Strategy
