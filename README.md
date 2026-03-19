@@ -131,6 +131,16 @@ Naive selection is O(NK²). We achieve O(K log K) in practice using:
 
 The Rust implementation achieves ~50x speedup over pure Python.
 
+### Saturating Distance Functions
+
+Raw Euclidean distance grows unboundedly in high-dimensional behavior spaces, making the diversity term dominate fitness. We use **exponential saturation** to bound distances to [0, 1]:
+
+```
+d_sat(b₁, b₂) = 1 - exp(-||b₁ - b₂|| / σ)
+```
+
+This has a key advantage over Gaussian saturation `1 - exp(-||b₁-b₂||²/2σ²)`: it maintains a **linear gradient at small distances**, avoiding the "dead zone" where Gaussian saturation returns near-zero values for nearby solutions. This means the selector can still discriminate between close neighbors — critical for maintaining fine-grained diversity in dense regions of the archive.
+
 ## 📁 Project Structure
 
 ```
