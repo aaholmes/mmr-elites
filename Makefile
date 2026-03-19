@@ -17,12 +17,12 @@ test-cov:
 
 # Code quality
 lint:
-	black --check mmr_elites/ tests/ experiments/
-	isort --check mmr_elites/ tests/ experiments/
+	black --check mmr_elites/ tests/ experiments/ examples/
+	isort --check mmr_elites/ tests/ experiments/ examples/
 
 format:
-	black mmr_elites/ tests/ experiments/
-	isort mmr_elites/ tests/ experiments/
+	black mmr_elites/ tests/ experiments/ examples/
+	isort mmr_elites/ tests/ experiments/ examples/
 
 # Running
 demo:

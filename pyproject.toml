@@ -27,6 +27,9 @@ demo = [
     "streamlit>=1.20",
     "plotly>=5.0",
 ]
+examples = [
+    "sentence-transformers>=2.0",
+]
 
 [project.scripts]
 mmr-elites = "mmr_elites.cli:main"

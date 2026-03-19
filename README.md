@@ -65,6 +65,15 @@ mmr-elites compare --dimensions 5 10 20 50 100
 mmr-elites demo
 ```
 
+### LLM Response Selection
+
+MMR-Elites works anywhere you need diverse, high-quality selections -- including text. This example selects diverse responses to a prompt using sentence embeddings:
+
+```bash
+pip install -e ".[examples]"
+python examples/llm_response_selection.py
+```
+
 ### Python API
 
 ```python
