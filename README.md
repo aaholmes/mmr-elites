@@ -49,7 +49,25 @@ maturin develop --release
 pip install -e .
 ```
 
-### Usage
+### LLM Response Selection
+
+MMR-Elites works anywhere you need diverse, high-quality selections -- including text. Given 25 candidate responses to "What strategies help someone learn to code?", the selector picks 8 that cover distinct strategies while maintaining quality:
+
+```bash
+pip install -e ".[examples]"
+python examples/llm_response_selection.py
+```
+
+```
+                  Metric      Top-K   MMR-Elites
+                  Mean quality  0.889        0.876
+                  Diversity     0.614        0.702
+                  Clusters       3/7          5/7
+```
+
+Naive top-K selects 4 "build projects" paraphrases. MMR-Elites covers projects, courses, open-source, mentorship, and teaching -- at 99% of the quality.
+
+### QD Benchmarks
 
 ```bash
 # Run a quick experiment
@@ -63,15 +81,6 @@ mmr-elites compare --dimensions 5 10 20 50 100
 
 # Launch interactive demo
 mmr-elites demo
-```
-
-### LLM Response Selection
-
-MMR-Elites works anywhere you need diverse, high-quality selections -- including text. This example selects diverse responses to a prompt using sentence embeddings:
-
-```bash
-pip install -e ".[examples]"
-python examples/llm_response_selection.py
 ```
 
 ### Python API
@@ -132,6 +141,7 @@ mmr-elites/
 │   ├── metrics/         # QD metrics
 │   └── utils/           # Config, visualization, statistics
 ├── src/lib.rs           # Rust MMR selector
+├── examples/           # Standalone demo (LLM response selection)
 ├── experiments/         # Experiment scripts
 ├── tests/              # Test suite
 └── demo/               # Interactive Streamlit demo
