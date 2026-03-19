@@ -12,7 +12,7 @@ test:
 	PYTHONPATH=. pytest tests/ -v
 
 test-cov:
-	PYTHONPATH=. pytest tests/ --cov=mmr_elites --cov-report=html
+	PYTHONPATH=. pytest tests/ --cov=mmr_elites --cov=examples --cov-report=html --cov-report=term-missing
 	@echo "Coverage report: htmlcov/index.html"
 
 # Code quality

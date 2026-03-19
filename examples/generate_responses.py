@@ -4,6 +4,9 @@ Generate and score LLM responses using Gemini 2.5 Flash.
 
 Produces responses.json for use by llm_response_selection.py.
 Requires GEMINI_API_KEY environment variable.
+
+Each response is scored individually in a separate API call to eliminate
+order/contrast bias that arises from scoring all responses together.
 """
 
 import json
@@ -31,14 +34,13 @@ GENERATION_INSTRUCTION = (
     "Vary the quality naturally -- some should be excellent, some good, some mediocre."
 )
 
-SCORING_INSTRUCTION = (
-    "Rate each of the following responses to the question: "
-    f'"{PROMPT}"\n\n'
-    "For each response, score it on a 1-10 scale considering:\n"
+SCORING_INSTRUCTION_SINGLE = (
+    'Rate the following response to the question: "{PROMPT}"\n\n'
+    "Score it on a 1-10 scale considering:\n"
     "- Helpfulness: Does it give useful, practical advice?\n"
     "- Specificity: Does it go beyond generic platitudes?\n"
     "- Actionability: Could someone follow this advice immediately?\n\n"
-    "Return a JSON array with one object per response, in the same order."
+    "The response:\n"
 )
 
 
@@ -50,13 +52,86 @@ class ResponseList(BaseModel):
     responses: list[Response]
 
 
-class Score(BaseModel):
+class SingleScore(BaseModel):
     score: float
     reasoning: str
 
 
-class ScoreList(BaseModel):
-    scores: list[Score]
+def normalize_scores(raw_scores: list[float]) -> list[float]:
+    """Normalize raw scores to [0, 1]. All-same → 0.5, empty → []."""
+    if not raw_scores:
+        return []
+    if len(raw_scores) == 1:
+        return [0.5]
+    min_s, max_s = min(raw_scores), max(raw_scores)
+    if max_s > min_s:
+        return [(s - min_s) / (max_s - min_s) for s in raw_scores]
+    return [0.5] * len(raw_scores)
+
+
+def build_single_scoring_prompt(response_text: str) -> str:
+    """Build a scoring prompt for a single response."""
+    return SCORING_INSTRUCTION_SINGLE.format(PROMPT=PROMPT) + response_text
+
+
+def generate_responses(client, model: str) -> list[str]:
+    """Generate candidate responses using the LLM."""
+    gen_result = client.models.generate_content(
+        model=model,
+        contents=GENERATION_INSTRUCTION,
+        config=genai.types.GenerateContentConfig(
+            response_mime_type="application/json",
+            response_schema=ResponseList,
+        ),
+    )
+    response_list = json.loads(gen_result.text)
+    return [r["text"] for r in response_list["responses"]]
+
+
+def score_single_response(client, model: str, response_text: str) -> dict:
+    """Score a single response, returning {"score": float, "reasoning": str}."""
+    prompt = build_single_scoring_prompt(response_text)
+    result = client.models.generate_content(
+        model=model,
+        contents=prompt,
+        config=genai.types.GenerateContentConfig(
+            response_mime_type="application/json",
+            response_schema=SingleScore,
+        ),
+    )
+    return json.loads(result.text)
+
+
+def score_all_responses(client, model: str, texts: list[str]) -> list[dict]:
+    """Score each response individually, printing progress."""
+    scores = []
+    for i, text in enumerate(texts, 1):
+        print(f"  Scoring response {i}/{len(texts)}...")
+        scores.append(score_single_response(client, model, text))
+    return scores
+
+
+def build_output(
+    prompt: str,
+    model: str,
+    texts: list[str],
+    normalized: list[float],
+    scores: list[dict],
+) -> dict:
+    """Build the output dictionary for JSON serialization."""
+    return {
+        "prompt": prompt,
+        "model": model,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "responses": [
+            {
+                "text": t,
+                "quality": round(q, 3),
+                "score_reasoning": s["reasoning"],
+            }
+            for t, q, s in zip(texts, normalized, scores)
+        ],
+    }
 
 
 def main():
@@ -70,63 +145,18 @@ def main():
 
     # Step 1: Generate responses
     print(f"Generating responses with {model}...")
-    gen_result = client.models.generate_content(
-        model=model,
-        contents=GENERATION_INSTRUCTION,
-        config=genai.types.GenerateContentConfig(
-            response_mime_type="application/json",
-            response_schema=ResponseList,
-        ),
-    )
-    response_list = json.loads(gen_result.text)
-    texts = [r["text"] for r in response_list["responses"]]
+    texts = generate_responses(client, model)
     print(f"  Generated {len(texts)} responses.")
 
-    # Step 2: Score all responses in a single call
+    # Step 2: Score each response individually
     print("Scoring responses...")
-    numbered = "\n".join(f"{i+1}. {t}" for i, t in enumerate(texts))
-    scoring_prompt = f"{SCORING_INSTRUCTION}\n\n{numbered}"
+    scores = score_all_responses(client, model, texts)
 
-    score_result = client.models.generate_content(
-        model=model,
-        contents=scoring_prompt,
-        config=genai.types.GenerateContentConfig(
-            response_mime_type="application/json",
-            response_schema=ScoreList,
-        ),
-    )
-    score_list = json.loads(score_result.text)
-    scores = score_list["scores"]
-
-    if len(scores) != len(texts):
-        print(f"Warning: got {len(scores)} scores for {len(texts)} responses.")
-        # Truncate to match
-        n = min(len(scores), len(texts))
-        texts = texts[:n]
-        scores = scores[:n]
-
-    # Normalize scores from 1-10 to [0, 1]
+    # Step 3: Normalize and save
     raw_scores = [s["score"] for s in scores]
-    min_s, max_s = min(raw_scores), max(raw_scores)
-    if max_s > min_s:
-        normalized = [(s - min_s) / (max_s - min_s) for s in raw_scores]
-    else:
-        normalized = [0.5] * len(raw_scores)
+    normalized = normalize_scores(raw_scores)
 
-    # Step 3: Save
-    output = {
-        "prompt": PROMPT,
-        "model": model,
-        "generated_at": datetime.now(timezone.utc).isoformat(),
-        "responses": [
-            {
-                "text": t,
-                "quality": round(q, 3),
-                "score_reasoning": s["reasoning"],
-            }
-            for t, q, s in zip(texts, normalized, scores)
-        ],
-    }
+    output = build_output(PROMPT, model, texts, normalized, scores)
 
     out_path = os.path.join(os.path.dirname(__file__), "responses.json")
     with open(out_path, "w") as f:
