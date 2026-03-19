@@ -51,21 +51,19 @@ pip install -e .
 
 ### LLM Response Selection
 
-MMR-Elites works anywhere you need diverse, high-quality selections -- including text. Given 25 candidate responses to "What strategies help someone learn to code?", the selector picks 8 that cover distinct strategies while maintaining quality:
+MMR-Elites works anywhere you need diverse, high-quality selections -- including text. Given 25 candidate responses to "What strategies help someone learn to code?" (generated and scored by Gemini 2.5 Flash), the selector picks 8 that cover distinct strategies while maintaining quality:
 
 ```bash
 pip install -e ".[examples]"
+
+# Run the demo (uses pre-generated responses, no API key needed)
 python examples/llm_response_selection.py
+
+# Optionally regenerate responses with your own Gemini API key
+GEMINI_API_KEY=... python examples/generate_responses.py
 ```
 
-```
-                  Metric      Top-K   MMR-Elites
-                  Mean quality  0.889        0.876
-                  Diversity     0.614        0.702
-                  Clusters       3/7          5/7
-```
-
-Naive top-K selects 4 "build projects" paraphrases. MMR-Elites covers projects, courses, open-source, mentorship, and teaching -- at 99% of the quality.
+Naive top-K selects semantically similar high-scoring responses. MMR-Elites covers a wider range of strategies -- project-based, social, formal, self-study -- at minimal quality cost.
 
 ### QD Benchmarks
 

@@ -1,0 +1,132 @@
+{
+  "prompt": "What strategies help someone learn to code?",
+  "model": "gemini-2.5-flash",
+  "generated_at": "2026-03-19T00:00:00+00:00",
+  "responses": [
+    {
+      "text": "Build real projects from day one. Start with a personal website, then a CLI tool, then something with a database -- each project forces you to solve problems no tutorial covers.",
+      "quality": 1.0,
+      "score_reasoning": "Highly specific, actionable, and gives a clear progression path. Excellent advice that goes beyond platitudes."
+    },
+    {
+      "text": "Pick a project you genuinely care about -- a budget tracker, a game, a bot for your group chat. Intrinsic motivation beats any curriculum because you'll push through frustration when you care about the outcome.",
+      "quality": 0.944,
+      "score_reasoning": "Very actionable with concrete examples. The motivation insight is valuable and specific."
+    },
+    {
+      "text": "Clone apps you use daily. Rebuild a simplified Twitter or Spotify. Reverse-engineering familiar products builds deep intuition for how real software architecture works.",
+      "quality": 0.889,
+      "score_reasoning": "Specific strategy with good examples. Actionable and explains the pedagogical benefit."
+    },
+    {
+      "text": "Follow a structured course like Harvard's CS50 or freeCodeCamp. A well-designed curriculum removes decision fatigue about what to learn next and ensures you don't skip foundational topics.",
+      "quality": 0.833,
+      "score_reasoning": "Names specific resources. Explains why structure helps. Solid actionable advice."
+    },
+    {
+      "text": "Take an interactive platform like Exercism or Codecademy that gives immediate feedback on your code. Fast feedback loops are critical for building correct mental models early.",
+      "quality": 0.778,
+      "score_reasoning": "Good specificity with named platforms. The feedback loop insight adds value."
+    },
+    {
+      "text": "Contribute to open-source projects on GitHub. Start with issues labeled 'good first issue' -- even small PRs teach you version control, code review, and how to read unfamiliar codebases.",
+      "quality": 0.944,
+      "score_reasoning": "Extremely actionable with a specific starting point. Covers multiple skills learned from one activity."
+    },
+    {
+      "text": "Read open-source code on GitHub before you try to write your own. Study how popular libraries like Flask or Express are structured -- you'll absorb architectural patterns by osmosis.",
+      "quality": 0.722,
+      "score_reasoning": "Good strategy with specific examples, though 'absorb by osmosis' is a bit vague on mechanism."
+    },
+    {
+      "text": "Find a mentor or join a study group. Having someone to ask when you're stuck on an error message for two hours can save days of frustration and prevent you from quitting.",
+      "quality": 0.667,
+      "score_reasoning": "Sound advice but somewhat generic. Doesn't explain how to find a mentor specifically."
+    },
+    {
+      "text": "Pair-program with someone more experienced. Watching how they debug, navigate documentation, and break down problems teaches tacit skills that no tutorial can convey.",
+      "quality": 0.778,
+      "score_reasoning": "Specific strategy that identifies what you learn from it. Good insight about tacit knowledge."
+    },
+    {
+      "text": "Join a coding bootcamp if you need structured accountability. The social pressure of a cohort and deadlines prevents the slow fade that kills most self-study attempts.",
+      "quality": 0.611,
+      "score_reasoning": "Reasonable advice with good insight about accountability, but bootcamps are expensive and not universally accessible."
+    },
+    {
+      "text": "Teach what you learn -- write blog posts, make YouTube videos, or explain concepts to non-technical friends. Teaching forces you to find the gaps in your own understanding.",
+      "quality": 0.833,
+      "score_reasoning": "Excellent strategy with multiple concrete ways to do it. The Feynman technique insight is well-applied."
+    },
+    {
+      "text": "Use rubber-duck debugging: explain your code line by line to an inanimate object. Verbalizing your logic exposes flawed assumptions that silent reading misses.",
+      "quality": 0.722,
+      "score_reasoning": "Specific technique with clear mechanism of action. Useful for debugging but narrow in scope."
+    },
+    {
+      "text": "Solve coding challenges on LeetCode or HackerRank, but focus on understanding patterns rather than memorizing solutions. Start with easy problems and resist the urge to look at answers for at least 30 minutes.",
+      "quality": 0.667,
+      "score_reasoning": "Names specific platforms and gives a practical time guideline. The 'patterns over memorization' framing is helpful."
+    },
+    {
+      "text": "Try game-based coding platforms like CodeCombat, Screeps, or Untrusted. Writing code to control game characters sustains motivation through the difficult early phase when syntax feels alien.",
+      "quality": 0.556,
+      "score_reasoning": "Decent suggestion with named platforms. More suited to absolute beginners; limited long-term value."
+    },
+    {
+      "text": "Participate in hackathons, even as a beginner. The 24-48 hour time constraint forces you to ship something imperfect, which cures the perfectionism paralysis that blocks many learners.",
+      "quality": 0.611,
+      "score_reasoning": "Good insight about perfectionism, but hackathons can be intimidating for true beginners without guidance."
+    },
+    {
+      "text": "Do Advent of Code each December or Project Euler year-round. Daily bite-sized puzzles build consistency and expose you to algorithmic thinking you wouldn't encounter in web tutorials.",
+      "quality": 0.556,
+      "score_reasoning": "Specific resources mentioned. Good for algorithmic skills but narrow -- won't teach you to build real software."
+    },
+    {
+      "text": "Learn data structures and algorithms early, even if it feels abstract. Understanding how hash maps, trees, and graphs work makes every subsequent concept click faster.",
+      "quality": 0.5,
+      "score_reasoning": "Sound advice but quite generic. Doesn't say how to learn them or what resources to use."
+    },
+    {
+      "text": "Study how computers actually work -- memory management, CPU architecture, networking basics. A mental model of the machine beneath your code makes debugging far less mysterious.",
+      "quality": 0.444,
+      "score_reasoning": "Valid long-term advice but not actionable for beginners. No specific resources or starting points given."
+    },
+    {
+      "text": "Read foundational CS texts like 'Structure and Interpretation of Computer Programs' or 'The Little Schemer.' They rewire how you think about computation itself, not just a particular language.",
+      "quality": 0.389,
+      "score_reasoning": "Names specific books, but SICP is notoriously difficult for beginners. More aspirational than immediately actionable."
+    },
+    {
+      "text": "Learn Git and version control immediately, before you think you need it. Every professional workflow depends on it, and it saves you from losing work during the chaotic early learning phase.",
+      "quality": 0.5,
+      "score_reasoning": "Practical advice that many beginners overlook. Could be more specific about how to learn Git."
+    },
+    {
+      "text": "Watch video tutorials on YouTube, but always pause and code along rather than passively watching. Passive consumption creates a dangerous illusion of understanding that collapses when you face a blank editor.",
+      "quality": 0.667,
+      "score_reasoning": "Important warning about passive learning with a vivid description of the failure mode. Actionable tip."
+    },
+    {
+      "text": "Set a consistent daily coding schedule, even if it's just 30 minutes. Frequency matters more than duration -- daily practice builds neural pathways that weekend marathons don't.",
+      "quality": 0.333,
+      "score_reasoning": "Generic productivity advice. The '30 minutes' guideline is specific but the overall strategy is not coding-specific."
+    },
+    {
+      "text": "Ask questions on Stack Overflow and Discord servers for your language. Learning to formulate a clear, minimal question with a reproducible example is itself a core engineering skill.",
+      "quality": 0.556,
+      "score_reasoning": "Good insight about question-asking as a skill. Names specific platforms but somewhat generic overall."
+    },
+    {
+      "text": "Review pull requests on open-source projects you follow, even before you can contribute. Reading code review discussions is like eavesdropping on senior engineers teaching junior engineers.",
+      "quality": 0.778,
+      "score_reasoning": "Creative, specific strategy that most beginners wouldn't think of. The metaphor clearly conveys the value."
+    },
+    {
+      "text": "Alternate between tutorials and unguided building. Tutorials teach syntax and patterns; unguided building teaches problem decomposition and resourcefulness. Neither alone is sufficient.",
+      "quality": 0.889,
+      "score_reasoning": "Excellent meta-strategy that addresses a common failure mode. Specific and insightful about why both modes matter."
+    }
+  ]
+}

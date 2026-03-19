@@ -29,6 +29,7 @@ demo = [
 ]
 examples = [
     "sentence-transformers>=2.0",
+    "google-genai>=1.0",
 ]
 
 [project.scripts]
