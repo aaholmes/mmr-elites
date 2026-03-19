@@ -36,13 +36,23 @@ def main():
     output_path.mkdir(parents=True, exist_ok=True)
 
     task = ArmTask(n_dof=20, use_highdim_descriptor=True)
-    all_results = {"MMR-Elites": [], "MAP-Elites": [], "CVT-MAP-Elites": [], "Random": []}
+    all_results = {
+        "MMR-Elites": [],
+        "MAP-Elites": [],
+        "CVT-MAP-Elites": [],
+        "Random": [],
+    }
 
     for seed in range(args.seeds):
         print(f"\n--- Seed {seed + 1}/{args.seeds} ---")
 
-        r = run_mmr_elites(task, archive_size=args.archive_size, generations=args.gens,
-                           lambda_val=args.lambda_val, seed=seed)
+        r = run_mmr_elites(
+            task,
+            archive_size=args.archive_size,
+            generations=args.gens,
+            lambda_val=args.lambda_val,
+            seed=seed,
+        )
         all_results["MMR-Elites"].append(r)
         print(f"  MMR-Elites:     QD={r['final_metrics']['qd_score']:.2f}")
 
@@ -50,11 +60,15 @@ def main():
         all_results["MAP-Elites"].append(r)
         print(f"  MAP-Elites:     QD={r['final_metrics']['qd_score']:.2f}")
 
-        r = run_cvt_map_elites(task, n_niches=args.archive_size, generations=args.gens, seed=seed)
+        r = run_cvt_map_elites(
+            task, n_niches=args.archive_size, generations=args.gens, seed=seed
+        )
         all_results["CVT-MAP-Elites"].append(r)
         print(f"  CVT-MAP-Elites: QD={r['final_metrics']['qd_score']:.2f}")
 
-        r = run_random_search(task, archive_size=args.archive_size, generations=args.gens, seed=seed)
+        r = run_random_search(
+            task, archive_size=args.archive_size, generations=args.gens, seed=seed
+        )
         all_results["Random"].append(r)
         print(f"  Random:         QD={r['final_metrics']['qd_score']:.2f}")
 
