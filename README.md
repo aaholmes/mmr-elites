@@ -3,11 +3,17 @@
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-In many settings one wants to choose a small subset from a large pool of candidates that is not only high-quality but also diverse. Selecting by quality alone produces redundancy: the best items tend to cluster together. This repo implements an efficient algorithm that solves this by balancing quality with diversity, using an old idea from information retrieval called Maximal Marginal Relevance (MMR). We call this algorithm MMR-Elites, in homage to both MMR and [MAP-Elites](https://arxiv.org/abs/1504.04909), a popular quality-diversity algorithm.
+In many settings one wants to choose a small subset from a large pool of candidates that is not only high-quality but also diverse. Selecting by quality alone produces redundancy: the best items tend to cluster together.
+
+This repo implements an efficient algorithm that solves this by balancing quality with diversity, using an old idea from information retrieval called Maximal Marginal Relevance (MMR).
+
+We call this algorithm MMR-Elites, in homage to both MMR and [MAP-Elites](https://arxiv.org/abs/1504.04909), a popular quality-diversity algorithm.
 
 ## 🎯 Example: LLM Response Selection
 
-As an example, consider selecting the 10 best responses from 50 LLM-generated pieces of advice about startup fundraising, where quality is scored by another LLM and semantic similarity is measured with an embedding model. Naive top-K grabs the highest-scoring responses, but they cluster around similar themes. MMR-Elites selects responses that are both high-quality *and* semantically distinct:
+As an example, consider selecting the 10 best responses from 50 LLM-generated pieces of advice about startup fundraising, where quality is scored by another LLM and semantic similarity is measured with an embedding model.
+
+Naive top-K grabs the highest-scoring responses, but they cluster around similar themes. MMR-Elites selects responses that are both high-quality *and* semantically distinct:
 
 | Method | Top-1 Quality | Mean Quality | Cosine Diversity |
 |--------|:------------:|:-----------:|:---------------:|
