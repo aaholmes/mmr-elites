@@ -150,34 +150,16 @@ print(f"Max Fitness: {result.final_metrics['max_fitness']:.4f}")
 print(f"Uniformity: {result.final_metrics['uniformity_cv']:.4f}")
 ```
 
-## 📁 Project Structure
-
-```
-mmr-elites/
-├── mmr_elites/           # Main package
-│   ├── algorithms/       # MMR-Elites, MAP-Elites, CVT-MAP-Elites
-│   ├── tasks/           # Benchmark tasks (Arm, Rastrigin)
-│   ├── metrics/         # QD metrics
-│   └── utils/           # Config, visualization, statistics
-├── src/lib.rs           # Rust MMR selector
-├── examples/           # Standalone demo (LLM response selection)
-├── experiments/         # Experiment scripts
-├── tests/              # Test suite
-└── demo/               # Interactive Streamlit demo
-```
-
 ## 📖 Citation
 
 If you use this code, please cite:
 
 ```bibtex
-@misc{holmes2026mmrelites,
-  title={Quality-Diversity as Information Retrieval:
-         Overcoming the Curse of Dimensionality with
-         Maximum Marginal Relevance Selection of Elites},
+@software{holmes2026mmrelites,
+  title={MMR-Elites: Quality-Diversity Optimization via Maximum Marginal Relevance},
   author={Holmes, Adam A.},
   year={2026},
-  note={arXiv preprint forthcoming}
+  url={https://github.com/aaholmes/mmr-elites}
 }
 ```
 
