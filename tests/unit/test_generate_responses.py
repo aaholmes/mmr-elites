@@ -39,7 +39,6 @@ from examples.generate_responses import (  # noqa: E402
     score_single_response,
 )
 
-
 # ---------------------------------------------------------------------------
 # TestNormalizeScores
 # ---------------------------------------------------------------------------
