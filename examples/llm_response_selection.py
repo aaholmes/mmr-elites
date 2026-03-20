@@ -20,6 +20,8 @@ Responses are loaded from responses.json (pre-generated, no API key needed).
 To regenerate: GEMINI_API_KEY=... python examples/generate_responses.py
 """
 
+from __future__ import annotations
+
 import argparse
 import json
 import os
@@ -111,13 +113,17 @@ def print_results(
 # ---------------------------------------------------------------------------
 
 
-def main(k: int = 8, lambda_val: float = 0.5, responses_path: str | None = None) -> None:
+def main(
+    k: int = 8, lambda_val: float = 0.5, responses_path: str | None = None
+) -> None:
     if responses_path is None:
         responses_path = os.path.join(os.path.dirname(__file__), "responses.json")
 
     if not os.path.exists(responses_path):
         print(f"Error: {responses_path} not found.")
-        print("Generate it with: GEMINI_API_KEY=... python examples/generate_responses.py")
+        print(
+            "Generate it with: GEMINI_API_KEY=... python examples/generate_responses.py"
+        )
         sys.exit(1)
 
     prompt, responses = load_responses(responses_path)
@@ -145,8 +151,12 @@ def main(k: int = 8, lambda_val: float = 0.5, responses_path: str | None = None)
     mmr_diversity = compute_diversity(embeddings, mmr_indices)
 
     # --- Results ---
-    print_results("Naive Top-K (by quality)", topk_indices, responses, quality, topk_diversity)
-    print_results("MMR-Elites Selection", mmr_indices, responses, quality, mmr_diversity)
+    print_results(
+        "Naive Top-K (by quality)", topk_indices, responses, quality, topk_diversity
+    )
+    print_results(
+        "MMR-Elites Selection", mmr_indices, responses, quality, mmr_diversity
+    )
 
     # --- Summary comparison ---
     quality_ratio = quality[mmr_indices].mean() / quality[topk_indices].mean()

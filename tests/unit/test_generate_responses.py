@@ -4,12 +4,13 @@ import json
 import os
 import sys
 import types
+from contextlib import ExitStack
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-# Mock google.genai before importing the module, since it calls sys.exit(1)
-# on ImportError at import time.
+# Mock google.genai and pydantic before importing the module, since it calls
+# sys.exit(1) on ImportError at import time and uses pydantic.BaseModel.
 _mock_genai = MagicMock()
 _mock_genai.types.GenerateContentConfig = MagicMock
 
@@ -18,6 +19,16 @@ _mock_google.genai = _mock_genai
 
 sys.modules.setdefault("google", _mock_google)
 sys.modules.setdefault("google.genai", _mock_genai)
+
+# Provide a real-enough BaseModel if pydantic isn't installed (CI environment).
+if "pydantic" not in sys.modules:
+    _mock_pydantic = types.ModuleType("pydantic")
+
+    class _FakeBaseModel:
+        pass
+
+    _mock_pydantic.BaseModel = _FakeBaseModel
+    sys.modules["pydantic"] = _mock_pydantic
 
 from examples.generate_responses import (  # noqa: E402
     build_output,
@@ -208,9 +219,7 @@ class TestMain:
 
         fake_texts = ["resp1", "resp2", "resp3"]
         gen_response = MagicMock()
-        gen_response.text = json.dumps(
-            {"responses": [{"text": t} for t in fake_texts]}
-        )
+        gen_response.text = json.dumps({"responses": [{"text": t} for t in fake_texts]})
 
         def fake_generate_content(**kwargs):
             contents = kwargs.get("contents", "")
@@ -226,17 +235,20 @@ class TestMain:
 
         out_path = str(tmp_path / "responses.json")
 
-        with (
-            patch.dict(os.environ, {"GEMINI_API_KEY": "test-key"}),
-            patch.object(mod.genai, "Client", return_value=mock_client),
-            patch.object(
-                mod.os.path,
-                "join",
-                side_effect=lambda *a: out_path
-                if "responses.json" in str(a)
-                else os.path.join(*a),
-            ),
-        ):
+        with ExitStack() as stack:
+            stack.enter_context(patch.dict(os.environ, {"GEMINI_API_KEY": "test-key"}))
+            stack.enter_context(
+                patch.object(mod.genai, "Client", return_value=mock_client)
+            )
+            stack.enter_context(
+                patch.object(
+                    mod.os.path,
+                    "join",
+                    side_effect=lambda *a: (
+                        out_path if "responses.json" in str(a) else os.path.join(*a)
+                    ),
+                )
+            )
             mod.main()
 
         with open(out_path) as f:
@@ -248,10 +260,9 @@ class TestMain:
     def test_missing_api_key_exits(self):
         from examples import generate_responses as mod
 
-        with (
-            patch.dict(os.environ, {}, clear=True),
-            pytest.raises(SystemExit),
-        ):
+        with ExitStack() as stack:
+            stack.enter_context(patch.dict(os.environ, {}, clear=True))
+            stack.enter_context(pytest.raises(SystemExit))
             # Ensure GEMINI_API_KEY is absent
             os.environ.pop("GEMINI_API_KEY", None)
             mod.main()

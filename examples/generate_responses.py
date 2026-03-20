@@ -9,6 +9,8 @@ Each response is scored individually in a separate API call to eliminate
 order/contrast bias that arises from scoring all responses together.
 """
 
+from __future__ import annotations
+
 import json
 import os
 import sys

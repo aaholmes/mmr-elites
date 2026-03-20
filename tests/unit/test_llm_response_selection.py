@@ -4,6 +4,7 @@ import json
 import os
 import sys
 import types
+from contextlib import ExitStack
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -40,7 +41,7 @@ def sample_responses_json(tmp_path):
         "generated_at": "2026-01-01T00:00:00+00:00",
         "responses": [
             {
-                "text": f"Response about topic {i}",
+                "text": "Response about topic %d" % i,
                 "quality": i / 9.0,
                 "score_reasoning": "ok",
             }
@@ -95,7 +96,9 @@ class TestSelectTopK:
         indices = select_top_k(quality, 4)
         selected_q = quality[indices]
         # Should be in descending order
-        assert all(selected_q[i] >= selected_q[i + 1] for i in range(len(selected_q) - 1))
+        assert all(
+            selected_q[i] >= selected_q[i + 1] for i in range(len(selected_q) - 1)
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -166,16 +169,18 @@ class TestPrintResults:
 # ---------------------------------------------------------------------------
 
 
+def _make_fake_embeddings(n_responses=10, dim=8):
+    """Helper to create normalized fake embeddings."""
+    fake = np.random.rand(n_responses, dim).astype(np.float64)
+    norms = np.linalg.norm(fake, axis=1, keepdims=True)
+    return fake / norms
+
+
 class TestMain:
     def test_full_pipeline(self, sample_responses_json):
         from examples import llm_response_selection as mod
 
-        n_responses = 10
-        dim = 8
-        fake_embeddings = np.random.rand(n_responses, dim).astype(np.float64)
-        # Normalize
-        norms = np.linalg.norm(fake_embeddings, axis=1, keepdims=True)
-        fake_embeddings = fake_embeddings / norms
+        fake_embeddings = _make_fake_embeddings()
 
         mock_model = MagicMock()
         mock_model.encode.return_value = fake_embeddings
@@ -183,10 +188,11 @@ class TestMain:
         mock_selector = MagicMock()
         mock_selector.select.return_value = np.array([0, 1, 2, 3, 4, 5, 6, 7])
 
-        with (
-            patch.object(mod, "SentenceTransformer", return_value=mock_model),
-            patch.object(mod, "mmr_elites_rs") as mock_rs_mod,
-        ):
+        with ExitStack() as stack:
+            stack.enter_context(
+                patch.object(mod, "SentenceTransformer", return_value=mock_model)
+            )
+            mock_rs_mod = stack.enter_context(patch.object(mod, "mmr_elites_rs"))
             mock_rs_mod.MMRSelector.return_value = mock_selector
             mod.main(k=8, lambda_val=0.5, responses_path=sample_responses_json)
 
@@ -199,11 +205,7 @@ class TestMain:
     def test_custom_responses_path(self, sample_responses_json):
         from examples import llm_response_selection as mod
 
-        n_responses = 10
-        dim = 8
-        fake_embeddings = np.random.rand(n_responses, dim).astype(np.float64)
-        norms = np.linalg.norm(fake_embeddings, axis=1, keepdims=True)
-        fake_embeddings = fake_embeddings / norms
+        fake_embeddings = _make_fake_embeddings()
 
         mock_model = MagicMock()
         mock_model.encode.return_value = fake_embeddings
@@ -211,22 +213,19 @@ class TestMain:
         mock_selector = MagicMock()
         mock_selector.select.return_value = np.array([0, 1, 2])
 
-        with (
-            patch.object(mod, "SentenceTransformer", return_value=mock_model),
-            patch.object(mod, "mmr_elites_rs") as mock_rs_mod,
-        ):
+        with ExitStack() as stack:
+            stack.enter_context(
+                patch.object(mod, "SentenceTransformer", return_value=mock_model)
+            )
+            mock_rs_mod = stack.enter_context(patch.object(mod, "mmr_elites_rs"))
             mock_rs_mod.MMRSelector.return_value = mock_selector
             mod.main(k=3, lambda_val=0.7, responses_path=sample_responses_json)
 
     def test_default_responses_path(self, sample_responses_json):
-        """Cover the None → default path branch (line 116)."""
+        """Cover the None -> default path branch."""
         from examples import llm_response_selection as mod
 
-        n_responses = 10
-        dim = 8
-        fake_embeddings = np.random.rand(n_responses, dim).astype(np.float64)
-        norms = np.linalg.norm(fake_embeddings, axis=1, keepdims=True)
-        fake_embeddings = fake_embeddings / norms
+        fake_embeddings = _make_fake_embeddings()
 
         mock_model = MagicMock()
         mock_model.encode.return_value = fake_embeddings
@@ -242,11 +241,11 @@ class TestMain:
                 return sample_responses_json
             return orig_join(*a)
 
-        with (
-            patch.object(mod, "SentenceTransformer", return_value=mock_model),
-            patch.object(mod, "mmr_elites_rs") as mock_rs_mod,
-            patch("os.path.join", side_effect=fake_join),
-        ):
+        with ExitStack() as stack:
+            stack.enter_context(
+                patch.object(mod, "SentenceTransformer", return_value=mock_model)
+            )
+            mock_rs_mod = stack.enter_context(patch.object(mod, "mmr_elites_rs"))
+            stack.enter_context(patch("os.path.join", side_effect=fake_join))
             mock_rs_mod.MMRSelector.return_value = mock_selector
             mod.main()  # no responses_path — exercises the default branch
-
