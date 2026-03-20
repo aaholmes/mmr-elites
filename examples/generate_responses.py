@@ -25,23 +25,31 @@ except ImportError:
 
 from pydantic import BaseModel
 
-PROMPT = "What strategies help someone learn to code?"
+PROMPT = "How should I approach fundraising for my startup?"
 
 GENERATION_INSTRUCTION = (
-    "Give me 25 diverse strategies for learning to code. Each should be 2-3 sentences. "
-    "Cover a wide range of approaches: self-study, social learning, project-based, "
-    "formal education, gamification, fundamentals-first, mentorship, teaching others, "
-    "open-source contribution, reading code, pair programming, etc. "
-    "Make each response specific and actionable, not generic platitudes. "
-    "Vary the quality naturally -- some should be excellent, some good, some mediocre."
+    "Give me 50 pieces of advice about fundraising for a startup. "
+    "Each should be 2-3 sentences. "
+    "Don't worry about covering different topics -- it's fine if multiple responses "
+    "address similar themes like pitch decks, investor meetings, or valuations. "
+    "Vary the quality naturally -- some should be genuinely novel insights that only "
+    "experienced founders would know, some should be decent but conventional wisdom, "
+    "and some should be vague platitudes or shallow advice."
 )
 
 SCORING_INSTRUCTION_SINGLE = (
     'Rate the following response to the question: "{PROMPT}"\n\n'
-    "Score it on a 1-10 scale considering:\n"
-    "- Helpfulness: Does it give useful, practical advice?\n"
-    "- Specificity: Does it go beyond generic platitudes?\n"
-    "- Actionability: Could someone follow this advice immediately?\n\n"
+    "Score each criterion independently on a 1-10 scale:\n\n"
+    "- Novelty (weight: 0.3): Does this offer a non-obvious insight, or could anyone "
+    "have said this? Truly original earns 8+. Generic listicle advice earns 1-4.\n"
+    "- Precision (weight: 0.3): Does it name specific tools, techniques, numbers, or "
+    'steps? Vague advice ("network more") scores low. Concrete advice with named '
+    "methods or metrics scores high.\n"
+    "- Depth (weight: 0.2): Does it explain WHY the strategy works, not just WHAT to "
+    "do? Surface-level earns 1-4, mechanistic reasoning earns 7+.\n"
+    "- Completeness (weight: 0.2): Could someone act on this immediately without "
+    "needing to look anything else up?\n\n"
+    "Be a tough but fair grader. Most responses should NOT score above 7 on novelty.\n\n"
     "The response:\n"
 )
 
@@ -55,7 +63,10 @@ class ResponseList(BaseModel):
 
 
 class SingleScore(BaseModel):
-    score: float
+    novelty: float
+    precision: float
+    depth: float
+    completeness: float
     reasoning: str
 
 
@@ -90,8 +101,19 @@ def generate_responses(client, model: str) -> list[str]:
     return [r["text"] for r in response_list["responses"]]
 
 
+SCORE_WEIGHTS = {"novelty": 0.3, "precision": 0.3, "depth": 0.2, "completeness": 0.2}
+
+
+def compute_weighted_score(scores: dict) -> float:
+    """Compute weighted total from per-criterion scores."""
+    return sum(scores[k] * w for k, w in SCORE_WEIGHTS.items())
+
+
 def score_single_response(client, model: str, response_text: str) -> dict:
-    """Score a single response, returning {"score": float, "reasoning": str}."""
+    """Score a single response with weighted criteria.
+
+    Returns dict with per-criterion scores, weighted total, and reasoning.
+    """
     prompt = build_single_scoring_prompt(response_text)
     result = client.models.generate_content(
         model=model,
@@ -101,7 +123,9 @@ def score_single_response(client, model: str, response_text: str) -> dict:
             response_schema=SingleScore,
         ),
     )
-    return json.loads(result.text)
+    parsed = json.loads(result.text)
+    parsed["score"] = compute_weighted_score(parsed)
+    return parsed
 
 
 def score_all_responses(client, model: str, texts: list[str]) -> list[dict]:
@@ -129,6 +153,11 @@ def build_output(
             {
                 "text": t,
                 "quality": round(q, 3),
+                "raw_score": round(s["score"], 2),
+                "novelty": s["novelty"],
+                "precision": s["precision"],
+                "depth": s["depth"],
+                "completeness": s["completeness"],
                 "score_reasoning": s["reasoning"],
             }
             for t, q, s in zip(texts, normalized, scores)

@@ -1,132 +1,507 @@
 {
-  "prompt": "What strategies help someone learn to code?",
+  "prompt": "How should I approach fundraising for my startup?",
   "model": "gemini-2.5-flash",
-  "generated_at": "2026-03-20T05:02:18.495257+00:00",
+  "generated_at": "2026-03-20T05:37:38.308863+00:00",
   "responses": [
     {
-      "text": "Choose a specific project you're passionate about, like building a simple personal website or a small game. Break it down into the smallest possible tasks and tackle them one by one, focusing on completing a functional minimum viable product.",
-      "quality": 1.0,
-      "score_reasoning": "The response provides excellent, actionable advice.Choosing a specific project provides motivation and a clear goal.Breaking it down into smaller tasks is a fundamental learning strategy, and focusing on an MVP helps prevent overwhelm and encourages early completion.The advice is specific enough with examples (personal website, small game) and is immediately actionable.It avoids generic platitudes and gives practical steps."
+      "text": "Warm intros are king. Cold emails are almost always ignored, so leverage your network relentlessly for direct introductions to relevant investors.",
+      "quality": 0.425,
+      "raw_score": 2.7,
+      "novelty": 2,
+      "precision": 3,
+      "depth": 4,
+      "completeness": 2,
+      "score_reasoning": "The advice \"Warm intros are king\" is highly conventional and lacks any novel insights, making it feel like generic listicle content. Its precision is low as it offers no specific tools, methods for obtaining intros, or criteria for identifying \"relevant investors.\" While it briefly explains why cold emails are ineffective, it provides minimal depth on why warm intros are superior beyond the obvious. Consequently, its completeness is very low; a founder would need extensive additional information and steps to act on this advice."
     },
     {
-      "text": "Enroll in a foundational Computer Science course, either online from a university or through a dedicated boot camp. Focus on truly understanding data structures, algorithms, and computational logic before diving into specific language syntax.",
-      "quality": 1.0,
-      "score_reasoning": "The response provides excellent, actionable advice by recommending foundational Computer Science courses and prioritizing core concepts like data structures and algorithms over mere language syntax. This is a highly effective strategy for long-term learning and understanding in coding, making it both helpful and specific."
+      "text": "Have a compelling pitch deck. Your deck is your first impression and should clearly articulate your problem, solution, market, team, and traction. Keep it concise and visually appealing.",
+      "quality": 0.45,
+      "raw_score": 2.8,
+      "novelty": 2,
+      "precision": 4,
+      "depth": 3,
+      "completeness": 2,
+      "score_reasoning": "The advice to create a compelling pitch deck is foundational but entirely generic. It lists standard components (problem, solution, market, team, traction) without offering any novel insights, specific tools, techniques, or actionable steps. While it briefly explains the 'why' (first impression), it doesn't delve into the deeper strategic reasons behind each component or how to achieve 'compelling' or 'concise.' A founder would need to look up significant additional information to act on this advice."
     },
     {
-      "text": "Turn learning into a game by using platforms like LeetCode, Codecademy, or Codewars to solve daily coding challenges. Track your progress, earn badges, and compete with others to maintain motivation and consistent practice.",
-      "quality": 1.0,
-      "score_reasoning": "The response is highly helpful as it suggests practical, engaging platforms for learning. It is specific by naming well-known resources (LeetCode, Codecademy, Codewars) and outlining clear activities like daily challenges, tracking progress, and competition. This advice is immediately actionable; someone could sign up for one of these platforms and start coding today. It effectively addresses both the \"how\" (solve challenges) and the \"why\" (maintain motivation, consistent practice) of learning to code."
+      "text": "Believe in yourself. Confidence is key to success, and if you don't believe in your startup, why should an investor?",
+      "quality": 0.05,
+      "raw_score": 1.2,
+      "novelty": 1,
+      "precision": 1,
+      "depth": 2,
+      "completeness": 1,
+      "score_reasoning": "The advice \"Believe in yourself. Confidence is key to success, and if you don't believe in your startup, why should an investor?\" is extremely generic. It offers no actionable insights, specific techniques, or structured advice relevant to fundraising. It provides a common truism rather than practical guidance, scoring very low on all metrics. While confidence is important, this response offers no pathway to achieving or demonstrating it within a fundraising context."
     },
     {
-      "text": "Seek out an experienced developer in your desired field and ask if they would be willing to offer mentorship, even for an hour a month. Prepare specific questions and bring concrete problems you're struggling with to maximize the value of their guidance.",
-      "quality": 1.0,
-      "score_reasoning": "This response offers highly helpful, specific, and actionable advice. Seeking mentorship from an experienced developer is a very effective strategy for learning to code, providing personalized guidance beyond what self-study alone can offer. The advice to prepare specific questions and concrete problems further maximizes the value of this mentorship, making it immediately practical and impactful for a learner."
+      "text": "Understand the investor's fund thesis. Don't waste time pitching a fintech investor if you're building biotech; research their portfolio and stated investment criteria before reaching out.",
+      "quality": 0.6,
+      "raw_score": 3.4,
+      "novelty": 2,
+      "precision": 4,
+      "depth": 5,
+      "completeness": 3,
+      "score_reasoning": "The advice is foundational and widely known within the startup community, offering very little novelty. While it provides specific aspects to research (portfolio, stated criteria) and a relevant example, it lacks precision by not naming tools or detailed research methods. It explains the 'why' (to avoid wasting time) for matching investors, giving it some depth. However, as a singular piece of advice, it's far from a complete approach to fundraising, requiring much more information to act on immediately."
     },
     {
-      "text": "Actively try to teach someone else a concept you've recently learned, whether it's a friend, family member, or a fellow beginner. Explaining ideas clearly will solidify your own understanding and expose any gaps in your knowledge.",
-      "quality": 1.0,
-      "score_reasoning": "The response offers a highly actionable and specific strategy: teaching a concept to someone else. This is a well-regarded learning technique (the Feynman technique) that is very helpful for solidifying understanding and identifying knowledge gaps. It is not generic, provides practical guidance on who to teach, and can be implemented immediately by a learner. The advice is excellent for someone learning to code."
+      "text": "Know your numbers inside and out. Be prepared to discuss your financial projections, unit economics, and key metrics in detail, showing a clear path to profitability.",
+      "quality": 0.45,
+      "raw_score": 2.8,
+      "novelty": 2,
+      "precision": 4,
+      "depth": 3,
+      "completeness": 2,
+      "score_reasoning": "This response offers fundamental and widely accepted advice regarding startup fundraising, scoring low on novelty as it's something almost any experienced advisor would state. It gains some points for precision by naming specific categories like 'financial projections', 'unit economics', and 'key metrics', but it lacks the concrete details of specific metrics, tools, or presentation techniques. The depth is limited; while it implies the 'why' (showing a clear path to profitability), it doesn't elaborate on the mechanisms of how these numbers build investor confidence or the specific narratives they should support. Completeness is low because a founder would need to perform substantial additional research to understand which specific numbers, projections, or metrics are relevant, how to calculate them, or how to effectively present them, making it not immediately actionable without further information."
     },
     {
-      "text": "Find a beginner-friendly open-source project that uses a technology you're learning and contribute to it. Start with small tasks like fixing a typo in the documentation or resolving a minor bug, then submit a pull request.",
-      "quality": 1.0,
-      "score_reasoning": "This response provides highly helpful and practical advice. It is specific by suggesting actions like 'fixing a typo in the documentation or resolving a minor bug' and 'submit a pull request.' The advice is immediately actionable as a learner can start looking for beginner-friendly open-source projects that align with their learning path."
-    },
-    {
-      "text": "Dedicate time to reading well-structured code from established libraries or frameworks. Try to understand the design patterns, architectural choices, and specific implementations without immediately trying to run or modify it yourself.",
-      "quality": 0.667,
-      "score_reasoning": "The response provides very helpful and practical advice. Reading well-structured code is a highly effective, albeit often overlooked, learning strategy that exposes learners to best practices and design patterns. It is specific in recommending 'established libraries or frameworks' and detailing the focus on 'design patterns, architectural choices, and specific implementations.' The advice is actionable, as someone can immediately find open-source projects to start reading and understanding, with the instruction not to immediately run or modify simplifying the initial steps. It's a solid piece of advice, though not a comprehensive learning path."
-    },
-    {
-      "text": "Find a peer or more experienced developer and engage in pair programming sessions. One person 'drives' (types) while the other 'navigates' (guides and reviews), switching roles frequently to foster collaborative problem-solving and shared learning.",
-      "quality": 1.0,
-      "score_reasoning": "The response offers highly specific and actionable advice by recommending pair programming. It clearly defines the roles of 'driver' and 'navigator' and explains the mechanism of switching roles, making it very helpful for someone looking for a practical strategy to learn coding. While finding a suitable partner might require some effort, the advice itself is clear and immediately applicable once a partner is found."
-    },
-    {
-      "text": "Choose a core library or framework you frequently use and commit to reading its official documentation thoroughly. Pay attention to examples, best practices, and advanced features you might have overlooked in your initial usage.",
-      "quality": 0.333,
-      "score_reasoning": "The advice is highly specific and actionable for someone who is already familiar with coding and frequently uses a library or framework. It provides a clear, practical strategy for deepening knowledge and understanding best practices. However, the question \"What strategies help someone learn to code?\" is broad and often implies foundational strategies for beginners. This particular piece of advice, while excellent for intermediate learners or those looking to master specific tools, may not be immediately helpful or applicable to an absolute beginner who doesn't yet \"frequently use\" any library or framework. Therefore, its overall helpfulness for the general 'learning to code' audience is somewhat limited, though strong for a subset."
-    },
-    {
-      "text": "Start a technical blog or a personal journal where you document your learning journey, challenges encountered, and solutions discovered. Articulating your thoughts in writing forces deeper understanding and creates a valuable reference.",
-      "quality": 1.0,
-      "score_reasoning": "The advice is highly helpful as documenting the learning process significantly aids comprehension, retention, and problem-solving skills. It is specific in suggesting both the medium (technical blog or personal journal) and the content to document (learning journey, challenges, solutions). Furthermore, it is immediately actionable; someone can start this practice without any prerequisites. It offers a practical and effective strategy for deeper learning."
-    },
-    {
-      "text": "Attend local tech meetups, virtual conferences, or online community events related to your interests. Network with other developers, listen to their experiences, and learn about new tools and industry trends.",
+      "text": "Work hard. Fundraising requires dedication and effort, so be prepared to put in the hours to get it done.",
       "quality": 0.0,
-      "score_reasoning": "The advice is actionable and specific regarding networking and community engagement, which are valuable aspects of a developer's journey. However, for the question 'What strategies help someone learn to code?', this response focuses more on peripheral benefits (motivation, staying updated, career insights) rather than direct methods for acquiring coding skills (e.g., practice, tutorials, projects, problem-solving). While beneficial, it's not a primary strategy for the actual 'learning to code' process itself."
+      "raw_score": 1.0,
+      "novelty": 1,
+      "precision": 1,
+      "depth": 1,
+      "completeness": 1,
+      "score_reasoning": "The response offers an extremely generic platitude (\"Work hard\") that applies to almost any challenging endeavor, not specifically fundraising. It provides no novel insights, specific tools, techniques, or actionable steps. There is no explanation of why this advice is particularly effective in fundraising, nor does it offer enough information for someone to act on immediately. It is the definition of surface-level and unhelpful advice."
     },
     {
-      "text": "Practice solving algorithm and data structure problems regularly on platforms like HackerRank or TopCoder. Focus on understanding the underlying concepts and various approaches to problem-solving, rather than just memorizing solutions.",
-      "quality": 0.667,
-      "score_reasoning": "The response provides highly useful, specific, and immediately actionable advice for a crucial aspect of learning to code. Recommending regular practice on platforms like HackerRank/TopCoder for algorithms and data structures, with an emphasis on understanding concepts over memorization, is excellent guidance. It avoids generic platitudes and gives concrete steps. While learning to code involves many strategies, the advice provided here is top-tier within its specific focus."
+      "text": "Fundraising is a full-time job for the CEO. Expect to spend 50-80% of your time on this, delegating operational tasks to your co-founders or key team members.",
+      "quality": 1.0,
+      "raw_score": 5.0,
+      "novelty": 5,
+      "precision": 7,
+      "depth": 4,
+      "completeness": 3,
+      "score_reasoning": "The advice that fundraising is a full-time job for the CEO is crucial but not novel; it's a well-known truth among experienced founders and investors, hence a score of 5 for novelty. The response achieves a good level of precision by providing a specific time allocation (50-80%) and clearly identifying the roles involved (CEO, co-founders/team). However, its depth is limited as it states what to do without explaining the underlying reasons why this approach is necessary or effective. It's an assertion rather than a mechanistic explanation. Lastly, the response is far from complete; while it offers valuable insight into time management during fundraising, it provides no actionable steps or strategies for the actual fundraising process itself (e.g., how to pitch, find investors, prepare materials), meaning a user would need to look up significant additional information to act on fundraising."
     },
     {
-      "text": "Build a personal portfolio website to showcase all your coding projects, even the small ones or works-in-progress. This not only practices your web development skills but also provides a tangible asset to demonstrate your abilities.",
+      "text": "Practice your pitch relentlessly. Rehearse with mentors, co-founders, and even a mirror so you can deliver your message confidently and articulately.",
+      "quality": 0.425,
+      "raw_score": 2.7,
+      "novelty": 2,
+      "precision": 3,
+      "depth": 4,
+      "completeness": 2,
+      "score_reasoning": "The advice to practice the pitch is fundamental and widely known, offering minimal novelty. Precision is low as it lacks specific techniques, tools, or frameworks for practicing a pitch effectively, beyond listing individuals to rehearse with. While it provides a basic 'why' (for confident and articulate delivery), it doesn't delve into deeper strategic reasons or investor psychology. Its completeness is very low; someone acting on this advice would immediately need to seek extensive information on pitch content, structure, and investor-specific considerations."
+    },
+    {
+      "text": "Don't give up. Persistence pays off in the long run, so keep pushing forward even when faced with rejection.",
       "quality": 0.0,
-      "score_reasoning": "The advice to build a personal portfolio is a good long-term strategy for demonstrating skills and practicing web development. It's specific about what to build and why it's beneficial. However, as a direct strategy for *learning to code* from scratch, it's less helpful or actionable for a complete beginner. It assumes prior learning and existing projects. While it promotes practice, it doesn't offer core learning methodologies for acquiring those initial coding skills, making it more of an advanced tip for ongoing development rather than a foundational learning strategy."
+      "raw_score": 1.0,
+      "novelty": 1,
+      "precision": 1,
+      "depth": 1,
+      "completeness": 1,
+      "score_reasoning": "The response is extremely generic and offers no actionable advice. \"Don't give up\" is the most basic motivational statement one could offer and applies to nearly any endeavor, lacking any novelty specific to startup fundraising. It provides no specific tools, techniques, numbers, or steps, making its precision virtually non-existent. There is no explanation of *why* persistence specifically benefits fundraising beyond a vague statement that it \"pays off in the long run,\" thus lacking depth. Finally, someone could not act on this immediately without needing to look anything else up; it offers no practical guidance whatsoever, rendering it completely incomplete."
     },
     {
-      "text": "Take a simple existing application, such as a calculator or a to-do list, and try to recreate its functionality from scratch without looking at its source code. Then, compare your solution to how others might have built it.",
-      "quality": 1.0,
-      "score_reasoning": "The advice is highly helpful, specific, and actionable. Recreating existing applications from scratch is a widely recognized and effective strategy for learning to code, providing hands-on experience and problem-solving practice. The suggestion to compare solutions is also very valuable for understanding different approaches and improving code quality. The examples provided (calculator, to-do list) make it easy for a beginner to get started immediately."
+      "text": "Practice saying \"no\" to bad terms. A quick, easy close isn't always the best close; don't be desperate and accept terms that will cripple your future.",
+      "quality": 0.175,
+      "raw_score": 1.7,
+      "novelty": 2,
+      "precision": 1,
+      "depth": 3,
+      "completeness": 1,
+      "score_reasoning": "The advice \"don't accept bad terms\" is a fundamental and widely known principle in any negotiation, including fundraising, making its novelty very low. It lacks precision by not defining what constitutes \"bad terms\" or offering specific examples, techniques, or steps on how to identify or avoid them. While it states *why* accepting bad terms is bad (\"cripple your future\"), this reasoning is quite surface-level and self-evident, lacking any deeper explanation of how to achieve a position where one *can* say no. Furthermore, the response is highly incomplete; a founder cannot act on this advice without needing to look up significant additional information on term sheet specifics, negotiation strategies, or ways to build leverage."
     },
     {
-      "text": "Actively participate in code reviews, either by reviewing others' code or asking for your own code to be reviewed. Learning to identify good practices and potential issues in existing code will significantly improve your own coding habits.",
-      "quality": 1.0,
-      "score_reasoning": "The response provides an excellent, highly specific, and actionable strategy for learning to code. Participating in code reviews is a very helpful method for understanding best practices and identifying issues. The advice clearly outlines how to engage (reviewing others' code or asking for reviews of your own) and explains the benefit, making it easy to follow immediately."
+      "text": "Build a strong team. Investors invest in people as much as ideas, so highlight your team's experience, relevant skills, and passion.",
+      "quality": 0.425,
+      "raw_score": 2.7,
+      "novelty": 2,
+      "precision": 3,
+      "depth": 4,
+      "completeness": 2,
+      "score_reasoning": "The advice to 'build a strong team' and highlight 'experience, skills, and passion' is extremely common and fundamental, lacking novelty. While it points to specific aspects (experience, skills, passion), it doesn't offer concrete methods, tools, or steps on *how* to highlight these or *how* to build such a team, leading to low precision. It provides a basic 'why' (investors invest in people as much as ideas) but doesn't delve deeper into the mechanics or psychology behind it, making its depth surface-level. Finally, someone could not act on this immediately without needing extensive additional information on practical execution, scoring low on completeness."
     },
     {
-      "text": "Intentionally introduce bugs into your own working code or use prepared buggy examples, then practice using debugging tools. Master setting breakpoints, stepping through code, and inspecting variables to efficiently identify and resolve errors.",
-      "quality": 1.0,
-      "score_reasoning": "The advice is highly helpful, specific, and actionable. Debugging is a fundamental skill in coding, and the response provides practical, immediate steps to master it, such as intentionally introducing bugs and using specific debugging tools and techniques like breakpoints and inspecting variables. It goes beyond generic advice to provide concrete strategies."
+      "text": "Stay positive. Maintain an optimistic outlook throughout the fundraising journey, as a positive attitude can make a significant difference.",
+      "quality": 0.05,
+      "raw_score": 1.2,
+      "novelty": 1,
+      "precision": 1,
+      "depth": 2,
+      "completeness": 1,
+      "score_reasoning": "The advice \"Stay positive\" is exceptionally generic and lacks any specific insights relevant to startup fundraising. It offers no concrete tools, techniques, numbers, or steps (precision). The explanation for 'why' it works is superficial (\"can make a significant difference\") without delving into any mechanistic reasoning (depth). A founder would gain no actionable information from this response and would need to look up everything else to actually approach fundraising (completeness)."
     },
     {
-      "text": "If you're comfortable with one programming paradigm (e.g., imperative), challenge yourself to learn a language from a different paradigm, like a functional language (e.g., Haskell) or an object-oriented one (e.g., Smalltalk). This broadens your problem-solving toolkit.",
-      "quality": 0.333,
-      "score_reasoning": "The response is specific, naming paradigms and example languages, and actionable for someone who meets the prerequisite of being comfortable with one paradigm. It offers a valuable strategy for deepening understanding and broadening a developer's toolkit. However, for the general question 'What strategies help someone learn to code?', this advice is more suited for an intermediate learner looking to expand their knowledge rather than a beginner seeking initial strategies to start learning."
+      "text": "Build relationships *before* you need money. Go to events, connect on LinkedIn, and offer value; when you eventually need to fundraise, these relationships will be invaluable.",
+      "quality": 0.375,
+      "raw_score": 2.5,
+      "novelty": 3,
+      "precision": 2,
+      "depth": 3,
+      "completeness": 2,
+      "score_reasoning": "The advice \"Build relationships before you need money\" is a very common and generic piece of networking advice, scoring low on novelty. It lacks precision, offering vague actions like \"go to events\" and \"offer value\" without specifying types of events, methods of offering value, or specific LinkedIn strategies. The depth is minimal; it explains the obvious \"why\" (relationships are invaluable when fundraising) but doesn't delve into the mechanisms of *how* or *why* these relationships provide specific advantages during fundraising. Completeness is low as someone would need to look up significant additional information to act on this advice effectively (e.g., which events, how to offer value, how to build strong relationships)."
     },
     {
-      "text": "Instead of focusing solely on web or mobile apps, try building small, useful command-line tools to automate tasks. This emphasizes scripting, file I/O, and user interaction, providing a different perspective on software development.",
-      "quality": 1.0,
-      "score_reasoning": "This response offers a highly helpful, specific, and actionable strategy for learning to code. It goes beyond generic advice by suggesting a concrete type of project (command-line tools) and explicitly states the core programming concepts (scripting, file I/O, user interaction) that would be emphasized. A learner could immediately understand this advice and begin to brainstorm tasks for automation, making it very actionable."
+      "text": "Demonstrate market size. Investors want to see a large addressable market, so clearly define your target market and its potential.",
+      "quality": 0.425,
+      "raw_score": 2.7,
+      "novelty": 2,
+      "precision": 3,
+      "depth": 4,
+      "completeness": 2,
+      "score_reasoning": "The advice \"Demonstrate market size\" is a foundational and extremely common piece of guidance in fundraising, offering very low novelty. It lacks precision by not detailing specific methodologies, tools, or steps to define or demonstrate market size effectively. While it states investors 'want to see a large addressable market,' the explanation of 'why' is surface-level, not delving into deeper motivations or mechanisms. Consequently, a founder could not act on this immediately without significant additional research, making its completeness very low."
     },
     {
-      "text": "Watch live coding streams or recorded sessions from experienced developers on platforms like Twitch or YouTube. Observe their thought process, debugging techniques, and how they approach real-world problems in an unscripted environment.",
-      "quality": 1.0,
-      "score_reasoning": "The advice is highly helpful, specific, and actionable. It clearly identifies platforms (Twitch, YouTube), specifies what to observe (thought process, debugging, problem-solving), and highlights the benefit of an unscripted environment. Someone could easily follow this advice immediately to gain valuable insights into real-world coding practices."
+      "text": "Learn from your mistakes. Each \"no\" is an opportunity to refine your approach, so take feedback to heart and iterate.",
+      "quality": 0.0,
+      "raw_score": 1.0,
+      "novelty": 1,
+      "precision": 1,
+      "depth": 1,
+      "completeness": 1,
+      "score_reasoning": "The advice \"Learn from your mistakes. Each 'no' is an opportunity to refine your approach, so take feedback to heart and iterate\" is extremely generic. It offers no specific insights, tools, techniques, numbers, or actionable steps relevant to fundraising. It merely states a universally applicable mindset without explaining the 'why' or providing enough detail for someone to act on it immediately. It's the kind of advice that could be given for any endeavor, not a tailored response to fundraising."
     },
     {
-      "text": "Join a local or online hackathon to work on a project under time pressure with a team. The intense collaborative environment forces rapid learning, practical application of skills, and networking opportunities.",
-      "quality": 1.0,
-      "score_reasoning": "The response provides a highly helpful, specific, and actionable strategy for learning to code. Joining a hackathon is an excellent, hands-on method for rapid skill acquisition, practical application, and networking. It goes beyond generic advice by suggesting a concrete activity and explaining its benefits. While it only offers one strategy when the question asked for 'strategies,' the quality and impact of this single suggestion are very high."
+      "text": "Know your precise ask and use of funds. Investors want to see a clear plan for their capital; vague \"we need money to grow\" won't cut it.",
+      "quality": 0.425,
+      "raw_score": 2.7,
+      "novelty": 2,
+      "precision": 3,
+      "depth": 4,
+      "completeness": 2,
+      "score_reasoning": "The advice is extremely common and fundamental, lacking any original insight (Novelty: 2). While it uses the word \"precise,\" it offers no specific tools, methods, or examples for how to achieve this precision in the ask or use of funds (Precision: 3). It provides a basic 'why' (investors want a clear plan) but doesn't delve into deeper mechanistic reasoning or investor psychology (Depth: 4). The advice is a high-level directive; a startup founder would need to look up significant additional information to actually \"know their precise ask and use of funds\" (Completeness: 2)."
     },
     {
-      "text": "Identify a tedious, repetitive task in your daily life, such as organizing files or sending routine emails, and write a script to automate it. This provides immediate, personal value and practical experience with scripting.",
-      "quality": 1.0,
-      "score_reasoning": "This response offers highly useful, specific, and actionable advice. It goes beyond generic 'do projects' by suggesting a specific type of project (automating a tedious personal task) that provides immediate value and motivation. A beginner could identify such a task and immediately begin researching how to script it, making it exceptionally actionable."
+      "text": "Show traction and momentum. Early indicators of customer adoption, revenue, or strategic partnerships are critical, proving that your idea has legs.",
+      "quality": 0.45,
+      "raw_score": 2.8,
+      "novelty": 2,
+      "precision": 4,
+      "depth": 3,
+      "completeness": 2,
+      "score_reasoning": "The advice \"Show traction and momentum\" is extremely common and generic, thus scoring low on novelty. While it lists specific types of traction (customer adoption, revenue, partnerships), it lacks any numerical targets, specific methods, or tools, leading to a low precision score. The depth is minimal, explaining \"proving that your idea has legs\" which is a surface-level 'why.' Finally, the advice is not actionable without significant further research, scoring low on completeness."
     },
     {
-      "text": "Choose a classic or highly-rated technical book on programming principles, a specific language, or software architecture, and read it thoroughly. Work through all the examples and exercises to gain in-depth knowledge.",
-      "quality": 0.333,
-      "score_reasoning": "The response provides a helpful and practical strategy emphasizing in-depth learning through classic technical books and active engagement with exercises. This is a solid approach for building foundational knowledge. It is reasonably specific in terms of the type of resource (classic/highly-rated technical book) and the topics (programming principles, specific language, software architecture), as well as the method (read thoroughly, work examples). The advice is actionable, as one can immediately start looking for such a book and engaging with it. However, it lacks specificity in recommending actual book titles or methods for identifying 'classic' or 'highly-rated' books, which could be a hurdle for a beginner. Additionally, it offers only one strategy in response to a question asking for 'strategies' (plural), thus not providing a comprehensive overview of how one might learn to code."
+      "text": "Be authentic. Investors appreciate genuine founders, so just be yourself and let your passion shine through.",
+      "quality": 0.05,
+      "raw_score": 1.2,
+      "novelty": 1,
+      "precision": 1,
+      "depth": 2,
+      "completeness": 1,
+      "score_reasoning": "The advice \"Be authentic\" is extremely generic and offers no non-obvious insights into fundraising (Novelty: 1). It lacks any specific tools, techniques, or actionable steps; it's entirely vague (Precision: 1). The explanation of 'why' (\"Investors appreciate genuine founders\") is superficial and does not delve into mechanistic reasoning (Depth: 2). A founder would not be able to act on this immediately or without significant further research, as it provides no concrete guidance (Completeness: 1)."
     },
     {
-      "text": "Actively participate in online coding communities like Stack Overflow, Reddit programming subreddits, or Discord servers. Answer questions you know the answer to, and ask well-researched questions when you're genuinely stuck, engaging with the collective knowledge.",
-      "quality": 1.0,
-      "score_reasoning": "This response provides highly helpful, specific, and actionable advice. It clearly names platforms (Stack Overflow, Reddit programming subreddits, Discord servers) and outlines concrete actions (answer questions, ask well-researched questions). This makes the advice easy to follow immediately and provides a valuable strategy for learning to code, particularly for problem-solving and community engagement. While it focuses on one strategy, it articulates it exceptionally well."
+      "text": "Fundraising is a sales process. Qualify your leads, nurture them, handle objections, and close, treating investors like your most important potential customers.",
+      "quality": 0.375,
+      "raw_score": 2.5,
+      "novelty": 3,
+      "precision": 2,
+      "depth": 3,
+      "completeness": 2,
+      "score_reasoning": "The core analogy of 'fundraising is a sales process' is quite common and not novel in the startup ecosystem. While it lists key sales steps (qualify, nurture, handle objections, close), it lacks precision by not offering any specific tools, techniques, or metrics applicable to fundraising. The depth is limited as it doesn't explain *why* this approach works or delves into the nuances of applying sales tactics to investor relations. Lastly, it is not complete enough for someone to act on immediately without extensive additional research on how to implement these generic sales steps in a fundraising context."
     },
     {
-      "text": "Enroll in a comprehensive online course from platforms like Coursera, edX, or Udemy that offers a structured curriculum with projects, quizzes, and a clear learning path. Commit to completing the course fully, even when it gets challenging.",
-      "quality": 0.667,
-      "score_reasoning": "The response offers highly helpful, specific, and actionable advice by recommending comprehensive online courses from platforms like Coursera, edX, or Udemy. It details what to look for in a good course (structured curriculum, projects, quizzes, clear path) and emphasizes commitment. This is excellent practical advice that someone could follow immediately. The only minor drawback is that the question asks 'What strategies...', implying potentially more than one, and the response focuses on a single, albeit very effective, strategy."
+      "text": "Clearly articulate your competitive advantage. What makes you unique and why will you win where others might fail? This differentiation is key.",
+      "quality": 0.3,
+      "raw_score": 2.2,
+      "novelty": 2,
+      "precision": 2,
+      "depth": 3,
+      "completeness": 2,
+      "score_reasoning": "The advice to \"clearly articulate your competitive advantage\" is very generic and a fundamental concept in business and fundraising. It offers no novel insight. The response lacks precision, not naming any specific tools, techniques, or methods for articulating this advantage. While it asks \"why will you win,\" it doesn't explain the underlying mechanics or investor psychology that makes this strategy effective, keeping the depth shallow. Finally, it provides no actionable steps, meaning a founder would need to look up everything else to implement this advice, making it incomplete."
     },
     {
-      "text": "Pick a complex computer science concept, like recursion or object-oriented programming, and try to explain it in terms so simple that a five-year-old could grasp the core idea. This exercise forces deep understanding and simplifies complex notions.",
-      "quality": 0.333,
-      "score_reasoning": "The response provides a specific, actionable, and helpful strategy for deepening understanding of complex computer science concepts, which is a vital part of learning to code. The 'explain to a five-year-old' technique (Feynman technique) is well-regarded for forcing deep comprehension. However, it only addresses conceptual understanding and doesn't cover other crucial aspects of learning to code, such as practical application, project building, debugging, or learning syntax, making it less comprehensive as a general 'learn to code' strategy."
+      "text": "Focus on your vision. Keep your ultimate goal in mind as you navigate the fundraising process, letting it guide your decisions.",
+      "quality": 0.05,
+      "raw_score": 1.2,
+      "novelty": 1,
+      "precision": 1,
+      "depth": 2,
+      "completeness": 1,
+      "score_reasoning": "The advice \"Focus on your vision. Keep your ultimate goal in mind\" is extremely generic and provides no non-obvious insights. It lacks any specific tools, techniques, numbers, or actionable steps, making it very low on precision. While it suggests what to do, it offers no explanation for why this strategy would mechanistically lead to fundraising success, remaining surface-level. Finally, it provides no practical guidance whatsoever, making it impossible to act upon immediately without needing to look up everything else."
+    },
+    {
+      "text": "The best time to raise money is when you don't need it. When you have strong momentum and cash in the bank, you negotiate from a position of strength, as scarcity often leads to bad deals.",
+      "quality": 0.525,
+      "raw_score": 3.1,
+      "novelty": 3,
+      "precision": 2,
+      "depth": 7,
+      "completeness": 1,
+      "score_reasoning": "The advice provided is a well-known adage in startup fundraising, lacking any original insight. It offers a general principle without any specific tools, techniques, numbers, or actionable steps, making it low on precision. However, it does explain the 'why' behind the advice, detailing that negotiating from strength prevents bad deals, which gives it some depth. Critically, the response is extremely incomplete, offering only one high-level strategic tip and providing no practical guidance for a founder to act upon."
+    },
+    {
+      "text": "Network constantly. Attend industry events, meetups, and investor conferences, as you never know where your next introduction might come from.",
+      "quality": 0.275,
+      "raw_score": 2.1,
+      "novelty": 2,
+      "precision": 3,
+      "depth": 2,
+      "completeness": 1,
+      "score_reasoning": "The advice to 'network constantly' and 'attend industry events' is extremely generic and lacks any novel insights. While it names types of events, it offers no specific tools, techniques, or actionable steps, making it low on precision. The explanation 'as you never know where your next introduction might come from' is surface-level and doesn't explain the underlying mechanics or effective strategies. Finally, the response is highly incomplete; someone would need to look up significant additional information to act on this advice effectively."
+    },
+    {
+      "text": "Build a great product. Ultimately, a strong product that solves a real problem is what attracts customers and investors alike.",
+      "quality": 0.05,
+      "raw_score": 1.2,
+      "novelty": 1,
+      "precision": 1,
+      "depth": 2,
+      "completeness": 1,
+      "score_reasoning": "The advice \"Build a great product\" is extremely generic and obvious, lacking any novel insight for fundraising. It offers no specific tools, techniques, or actionable steps related to fundraising, making its precision very low. While it gives a brief \"why\" (attracts customers and investors), it's a surface-level explanation that doesn't delve into the mechanics of fundraising. A founder could not act on this advice for fundraising without needing to look up everything else, hence its very low completeness."
+    },
+    {
+      "text": "Look for strategic investors, not just cash. An investor who brings industry connections, mentorship, or specific expertise can be far more valuable than just capital.",
+      "quality": 0.525,
+      "raw_score": 3.1,
+      "novelty": 3,
+      "precision": 2,
+      "depth": 6,
+      "completeness": 2,
+      "score_reasoning": "The advice to seek strategic investors over purely financial ones is common and widely accepted in the startup ecosystem, thus lacking novelty. It offers no specific tools, techniques, names, or actionable steps, making it very low on precision. It does explain *why* strategic investors are valuable (connections, mentorship, expertise), giving it some depth beyond a mere statement. However, it is far from complete; a founder could not act on this advice without needing significant additional information on how to identify, approach, or evaluate such investors."
+    },
+    {
+      "text": "Prepare for due diligence. Organize all your legal documents, financials, and operational data well in advance, making it easy for investors to verify your claims.",
+      "quality": 0.675,
+      "raw_score": 3.7,
+      "novelty": 3,
+      "precision": 4,
+      "depth": 5,
+      "completeness": 3,
+      "score_reasoning": "Novelty: \"Prepare for due diligence\" is incredibly standard advice for fundraising. It's a basic operational step, not a strategic insight.Precision: It names categories of documents (legal, financials, operational data) but doesn't specify *which* documents, tools for organization, or concrete timelines. \"Well in advance\" is vague.Depth: It provides a clear \"why\" \u2013 \"making it easy for investors to verify your claims.\" This is a functional explanation, but doesn't delve into deeper strategic or psychological reasons beyond the immediate benefit.Completeness: While it identifies an important area, it lacks the specifics needed for immediate action. A user would still need to research *what* specific documents, *how* to organize them, and *when* \"well in advance\" truly is. It's a high-level directive, not a step-by-step guide."
+    },
+    {
+      "text": "Communicate clearly. Ensure your message is easy to understand and free of jargon, as simplicity is often best when explaining complex ideas.",
+      "quality": 0.05,
+      "raw_score": 1.2,
+      "novelty": 1,
+      "precision": 1,
+      "depth": 2,
+      "completeness": 1,
+      "score_reasoning": "The advice \"Communicate clearly. Ensure your message is easy to understand and free of jargon\" is extremely generic. It offers no novel insights specific to startup fundraising that wouldn't apply to almost any professional interaction, hence the low novelty score. For precision, it provides no concrete tools, techniques, or specific steps a founder could take; \"easy to understand\" and \"free of jargon\" are vague directives without actionable methods. The depth is minimal; stating \"simplicity is often best when explaining complex ideas\" is a surface-level explanation of *why* clear communication is good, but it doesn't delve into the specific mechanisms or psychology behind investor decision-making in a fundraising context. Finally, it scores very low on completeness because a founder could not act on this single, broad piece of advice alone to fundraise; it lacks any details on process, content, materials, or strategy."
+    },
+    {
+      "text": "Pre-empt competitive rounds. If you can generate enough interest to create a competitive bidding situation, you'll likely get better terms and a higher valuation.",
+      "quality": 0.375,
+      "raw_score": 2.5,
+      "novelty": 2,
+      "precision": 3,
+      "depth": 4,
+      "completeness": 1,
+      "score_reasoning": "The advice to \"pre-empt competitive rounds\" and create a \"competitive bidding situation\" is very common and not novel in the fundraising world, earning a low novelty score. Precision is also low as it offers no specific tools, techniques, or actionable steps to generate interest or create such a situation. While it explains why competitive rounds are good (better terms, higher valuation), this reasoning is surface-level and universally understood, so depth is limited. Completeness is very low as the advice provides no guidance on how to actually achieve this goal, requiring the user to look up all practical steps elsewhere."
+    },
+    {
+      "text": "Get feedback on your pitch. Share your deck and practice with trusted advisors or other founders; their insights can be invaluable for refining your message.",
+      "quality": 0.5,
+      "raw_score": 3.0,
+      "novelty": 2,
+      "precision": 4,
+      "depth": 3,
+      "completeness": 3,
+      "score_reasoning": "The advice to get feedback on a pitch is incredibly common and not novel at all. While it suggests sharing the deck and practicing with 'trusted advisors or other founders,' it lacks precision by not naming specific methods for feedback, tools, or detailed steps. The depth is superficial, only stating 'insights can be invaluable for refining your message' without explaining the mechanics or deeper rationale behind effective feedback. For completeness, a user could not act on this immediately without needing to look up how to find such advisors, what specific feedback to seek, or how to implement it effectively."
+    },
+    {
+      "text": "Be prepared. Always be ready for any meeting or conversation, as thorough preparation is key to making a strong impression.",
+      "quality": 0.175,
+      "raw_score": 1.7,
+      "novelty": 2,
+      "precision": 1,
+      "depth": 3,
+      "completeness": 1,
+      "score_reasoning": "The advice \"Be prepared\" is exceedingly generic and lacks any specific actionable insights for startup fundraising. Its novelty is very low as it's common sense. Precision is poor as it names no specific tools, techniques, or steps relevant to fundraising preparation. Depth is minimal, explaining only that preparation helps make a \"strong impression\" without delving into why this is crucial in a fundraising context or what aspects specifically benefit. Completeness is very low as an individual could not act on this immediately without significant further research on what \"being prepared\" actually entails for fundraising."
+    },
+    {
+      "text": "Understand your cap table impact. Every dollar raised at a given valuation has long-term implications for your ownership, so model out future rounds carefully.",
+      "quality": 0.675,
+      "raw_score": 3.7,
+      "novelty": 4,
+      "precision": 3,
+      "depth": 6,
+      "completeness": 2,
+      "score_reasoning": "The response brings up a critical, often-underestimated aspect of fundraising: cap table impact. While important, the advice itself is quite generic and lacks specific tools, techniques, or examples for modeling. It explains 'why' it's important (long-term ownership implications) but doesn't provide enough 'how' for a founder to act without further research. It's a good conceptual reminder but not a comprehensive guide."
+    },
+    {
+      "text": "Follow up promptly and professionally. After every meeting, send a polite thank-you email and keep investors updated on your progress and milestones.",
+      "quality": 0.0,
+      "raw_score": 1.0,
+      "novelty": 1,
+      "precision": 1,
+      "depth": 1,
+      "completeness": 1,
+      "score_reasoning": "The advice provided is extremely generic and lacks any specific actionable details. It offers no novel insights, provides vague instructions, explains no underlying 'why,' and is far from complete enough for someone to act on without further research."
+    },
+    {
+      "text": "Make connections. Networking is always important, so talk to people, attend events, and expand your professional circle.",
+      "quality": 0.0,
+      "raw_score": 1.0,
+      "novelty": 1,
+      "precision": 1,
+      "depth": 1,
+      "completeness": 1,
+      "score_reasoning": "The response offers extremely generic advice that anyone could provide, lacking any non-obvious insights. It is entirely vague, failing to name specific tools, techniques, or actionable steps beyond basic platitudes about networking. There is no explanation of *why* networking is effective for fundraising, only a statement that it is important. Consequently, someone could not act on this advice immediately without needing to research virtually every practical aspect of fundraising and networking independently."
+    },
+    {
+      "text": "Focus on solving a deep pain point. Investors fund solutions to significant problems, not just cool ideas, so clearly articulate the problem and your unique solution.",
+      "quality": 0.225,
+      "raw_score": 1.9,
+      "novelty": 2,
+      "precision": 1,
+      "depth": 4,
+      "completeness": 1,
+      "score_reasoning": "The advice to focus on a 'deep pain point' and articulate the 'problem and unique solution' is foundational and ubiquitous in startup fundraising, lacking any non-obvious insights. It offers no specific tools, techniques, or actionable steps for identifying pain points or articulating solutions, making it very vague. While it provides a basic 'why' (investors fund solutions to problems), it doesn't delve into the mechanics or deeper reasoning. A founder could not act on this immediately as it lacks practical guidance."
+    },
+    {
+      "text": "Be passionate and enthusiastic. Your energy can be contagious, so show investors that you genuinely believe in what you're building and its potential.",
+      "quality": 0.125,
+      "raw_score": 1.5,
+      "novelty": 2,
+      "precision": 1,
+      "depth": 2,
+      "completeness": 1,
+      "score_reasoning": "The advice \"Be passionate and enthusiastic\" is exceedingly generic and offers no novel insights into fundraising. It lacks any precision, failing to name specific techniques, tools, or actionable steps. While it briefly touches on 'why' (energy can be contagious), this explanation is superficial and lacks real depth into the psychology or strategic impact. Consequently, it is far from complete, offering no practical guidance someone could act on immediately without needing significant additional information."
+    },
+    {
+      "text": "Stay organized. Keep track of investor conversations, follow-ups, and document requests to manage the process efficiently.",
+      "quality": 0.275,
+      "raw_score": 2.1,
+      "novelty": 2,
+      "precision": 3,
+      "depth": 2,
+      "completeness": 1,
+      "score_reasoning": "The advice \"Stay organized\" is extremely generic and offers no novel insight. While it mentions specific items to track (conversations, follow-ups, document requests), it lacks precision regarding *how* to track them (no tools, methods, or metrics are named). The explanation of *why* (to manage efficiently) is surface-level and obvious. A user could not act on this immediately without needing to find significant additional information on tools and best practices for organization."
+    },
+    {
+      "text": "Be transparent about challenges. Don't hide weaknesses or setbacks; investors appreciate founders who are honest and proactive in addressing problems.",
+      "quality": 0.675,
+      "raw_score": 3.7,
+      "novelty": 5,
+      "precision": 2,
+      "depth": 6,
+      "completeness": 2,
+      "score_reasoning": "The advice to be transparent about challenges is a generally accepted best practice, but it's not a novel insight that would surprise experienced founders or investors (novelty: 5). It lacks precision, offering no specific tools, methods, or examples of how to achieve this transparency or what 'proactive addressing' entails (precision: 2). The response does offer a 'why' - investors appreciate honesty and proactivity - which provides some depth beyond just the 'what,' though it doesn't delve into the nuanced psychological or strategic reasons (depth: 6). However, a founder could not immediately act on this advice without significant further research into how to implement transparency effectively in fundraising (completeness: 2)."
+    },
+    {
+      "text": "Research investors before you meet them. Understand their backgrounds, previous investments, and what types of companies they typically fund, then tailor your pitch accordingly.",
+      "quality": 0.5,
+      "raw_score": 3.0,
+      "novelty": 2,
+      "precision": 4,
+      "depth": 3,
+      "completeness": 3,
+      "score_reasoning": "The advice to research investors is fundamental and very common, lacking any non-obvious insights (Novelty: 2). While it names specific areas to research (backgrounds, investments, company types), it doesn't provide specific tools, metrics, or detailed steps for research or tailoring the pitch, making it somewhat vague (Precision: 4). It implicitly explains *why* to research (to tailor the pitch), but doesn't delve deeply into the underlying mechanisms or psychology behind why this strategy works beyond the obvious (Depth: 3). To act on this, one would still need to find resources on *how* to research investors and *how* to effectively tailor a pitch, so it's not immediately actionable without further lookup (Completeness: 3)."
+    },
+    {
+      "text": "Tell a good story. People connect with narratives, so craft a compelling story around your startup, its mission, and its impact.",
+      "quality": 0.25,
+      "raw_score": 2.0,
+      "novelty": 2,
+      "precision": 2,
+      "depth": 3,
+      "completeness": 1,
+      "score_reasoning": "The advice to \"tell a good story\" is extremely common and lacks any novel insights. It doesn't provide specific techniques or frameworks for crafting a story, making it low on precision. While it offers a basic \"why\" (people connect with narratives), it doesn't delve into the deeper psychological or strategic reasons. A founder could not act on this advice without significant further research, indicating very low completeness."
+    },
+    {
+      "text": "Always be closing, but be patient. Keep the process moving forward, but don't rush into a bad deal; persistence and patience are key to securing the right investment.",
+      "quality": 0.075,
+      "raw_score": 1.3,
+      "novelty": 2,
+      "precision": 1,
+      "depth": 1,
+      "completeness": 1,
+      "score_reasoning": "The advice offered is extremely generic. Phrases like 'always be closing,' 'be patient,' and 'persistence and patience are key' are common tropes in business advice and offer no unique insights. There is a complete lack of precision, with no specific tools, techniques, numbers, or actionable steps mentioned. It doesn't explain the 'why' behind any of its suggestions, offering only surface-level platitudes. Consequently, someone could not act on this immediately without needing to look up everything else, making it very incomplete."
+    },
+    {
+      "text": "Understand valuation. Have a realistic idea of what your company is worth and be prepared to justify it with data and market comparisons.",
+      "quality": 0.45,
+      "raw_score": 2.8,
+      "novelty": 2,
+      "precision": 4,
+      "depth": 3,
+      "completeness": 2,
+      "score_reasoning": "The advice to understand valuation is fundamental but lacks novelty, as it's a standard expectation in fundraising. It offers some precision by mentioning \"data\" and \"market comparisons,\" but doesn't specify *how* to do this (e.g., specific valuation methods, types of data, or market benchmarks). Depth is shallow as it explains WHAT to do but not WHY or the mechanics behind it. Completeness is low because a user would need to look up numerous details on how to actually perform a valuation and justify it with data, making it impossible to act on immediately."
+    },
+    {
+      "text": "Innovate constantly. Keep your product fresh, relevant, and ahead of the curve to maintain market appeal and attract investor interest.",
+      "quality": 0.05,
+      "raw_score": 1.2,
+      "novelty": 1,
+      "precision": 1,
+      "depth": 2,
+      "completeness": 1,
+      "score_reasoning": "The advice provided is extremely generic and offers no actionable insights specific to fundraising. \"Innovate constantly\" is a business truism, not a fundraising strategy. It lacks any specific tools, techniques, numbers, or steps. The explanation for why it works is superficial (good products attract investors, which is obvious). One could not act on this immediately for fundraising, as it gives no practical guidance on the fundraising process itself."
+    },
+    {
+      "text": "Your story is more important than your spreadsheets (initially). Investors are buying into your vision and your ability to execute; data validates, but the narrative inspires and captures attention.",
+      "quality": 0.525,
+      "raw_score": 3.1,
+      "novelty": 3,
+      "precision": 2,
+      "depth": 7,
+      "completeness": 1,
+      "score_reasoning": "The response articulates a common and valid principle in startup fundraising: the importance of narrative over raw data in initial investor engagement. It explains *why* this is the case (investors buy into vision and execution potential). However, this insight is not novel; it's widely accepted advice. It completely lacks precision, offering no specific tools, techniques, or actionable steps for crafting such a story or integrating it into a fundraising strategy. Consequently, it is highly incomplete, providing no guidance for immediate action."
+    },
+    {
+      "text": "Be prepared for tough questions. Investors will probe your weaknesses and challenge your assumptions, so anticipate these questions and have well-thought-out answers.",
+      "quality": 0.3,
+      "raw_score": 2.2,
+      "novelty": 2,
+      "precision": 2,
+      "depth": 3,
+      "completeness": 2,
+      "score_reasoning": "The advice \"Be prepared for tough questions\" is extremely generic and obvious; it offers no non-obvious insights. Precision is very low as it provides no specific tools, techniques, types of questions, or methods for preparation. Depth is minimal, explaining only the surface-level \"why\" (investors probe weaknesses) without delving into deeper strategic reasons or mechanisms. Completeness is low because a founder could not act on this immediately without significant additional research into what questions to anticipate and how to prepare. It's a foundational, almost common-sense statement rather than actionable advice."
+    },
+    {
+      "text": "Be adaptable. The market changes constantly, so your approach and strategy might need to evolve as well.",
+      "quality": 0.05,
+      "raw_score": 1.2,
+      "novelty": 1,
+      "precision": 1,
+      "depth": 2,
+      "completeness": 1,
+      "score_reasoning": "The advice \"Be adaptable\" is a generic platitude with no original insight. It offers zero precision, lacking any specific tools, techniques, or steps. The explanation for why it's important (\"The market changes constantly\") is superficial and offers no mechanistic depth. A user could not act on this immediately, making it completely lacking in completeness."
+    },
+    {
+      "text": "Show a clear path to exit. Investors want to know how they will eventually get a return on their investment, so discuss potential acquisition targets or IPO possibilities.",
+      "quality": 0.425,
+      "raw_score": 2.7,
+      "novelty": 2,
+      "precision": 3,
+      "depth": 4,
+      "completeness": 2,
+      "score_reasoning": "The advice is highly generic and offers no novel insights into fundraising. While it correctly identifies that investors seek a return, this is an obvious point. It lacks precision by not detailing *how* to show an exit path or *what specific elements* to include beyond just mentioning \"acquisition or IPO.\" The depth is superficial, providing a basic 'why' without exploring the intricacies of exit strategies or investor motivations. It is far from complete, as a founder would need to research extensively to turn this advice into actionable steps."
+    },
+    {
+      "text": "Understand the market. Knowing your industry inside and out, including trends and competitors, helps you present a compelling case.",
+      "quality": 0.05,
+      "raw_score": 1.2,
+      "novelty": 1,
+      "precision": 1,
+      "depth": 2,
+      "completeness": 1,
+      "score_reasoning": "The advice \"Understand the market\" is extremely generic and obvious, offering no novel insights. It lacks precision by not specifying any tools, techniques, or actionable steps to achieve this understanding. While it briefly states \"why\" (to present a compelling case), it offers no depth into *how* this understanding is translated or *how* to acquire it effectively. Consequently, it is completely lacking in completeness, as no one could act on this immediately without extensive further research."
+    },
+    {
+      "text": "Seek mentorship. Guidance from experienced founders and industry experts can be incredibly valuable during the fundraising process.",
+      "quality": 0.2,
+      "raw_score": 1.8,
+      "novelty": 2,
+      "precision": 2,
+      "depth": 2,
+      "completeness": 1,
+      "score_reasoning": "The advice \"Seek mentorship\" is extremely generic and lacks any novel insight. It does not offer specific tools, techniques, or steps. The explanation for why it's valuable is surface-level, merely stating it \"can be incredibly valuable\" without explaining the mechanisms behind that value. Furthermore, it is not actionable without significant additional research on how to find mentors or what specific guidance to seek."
+    },
+    {
+      "text": "Enjoy the journey. Fundraising is a demanding phase, but try to find moments to appreciate the progress and learning along the way.",
+      "quality": 0.0,
+      "raw_score": 1.0,
+      "novelty": 1,
+      "precision": 1,
+      "depth": 1,
+      "completeness": 1,
+      "score_reasoning": "The response offers extremely generic motivational advice that could apply to any challenging endeavor, not specific to startup fundraising. It lacks any novel insights, concrete techniques, specific steps, or underlying explanations. It provides zero actionable information, making it completely unhelpful for someone seeking guidance on how to approach fundraising."
+    },
+    {
+      "text": "Be patient. Good things take time, and securing the right investment often requires patience and persistence.",
+      "quality": 0.0,
+      "raw_score": 1.0,
+      "novelty": 1,
+      "precision": 1,
+      "depth": 1,
+      "completeness": 1,
+      "score_reasoning": "The response offers extremely generic and obvious advice (\"Be patient\"). It lacks any specific tools, techniques, numbers, or actionable steps, making it completely imprecise. There is no explanation of *why* patience is a key strategy beyond a truism, indicating a complete lack of depth. Finally, a founder could not act on this advice without needing to look up everything else, meaning it has zero completeness."
     }
   ]
 }

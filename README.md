@@ -5,7 +5,26 @@
 
 **Quality-Diversity as Information Retrieval: Overcoming the Curse of Dimensionality with Maximum Marginal Relevance Selection of Elites**
 
-## 🎯 Key Insight
+## 🎯 Diverse, High-Quality Selection in One Step
+
+Given 50 LLM-generated responses about startup fundraising, naive top-K selection grabs the highest-scoring responses -- but they cluster around similar themes. MMR-Elites selects responses that are both high-quality *and* semantically distinct:
+
+| Method | Mean Quality | Cosine Diversity | Quality Retained |
+|--------|-------------|-----------------|-----------------|
+| Naive Top-K (K=8) | 0.650 | 0.684 | -- |
+| **MMR-Elites (K=8)** | **0.641** | **0.729** | 99% |
+| Naive Top-K (K=15) | 0.562 | 0.649 | -- |
+| **MMR-Elites (K=15)** | **0.543** | **0.694** | 97% |
+
+MMR-Elites trades <3% quality for 7% higher diversity by swapping redundant high-scoring responses for semantically distinct ones -- e.g., replacing a second "investor research" response with one about "competitive rounds" or "warm intros". Each response is scored individually on a weighted rubric (novelty, precision, depth, completeness) to avoid order bias.
+
+```bash
+# Try it yourself (pre-generated responses included, no API key needed)
+pip install -e ".[examples]"
+python examples/llm_response_selection.py
+```
+
+## 🔬 Key Insight
 
 Traditional Quality-Diversity (QD) algorithms like MAP-Elites discretize behavior space into grids, which scales exponentially with dimension (3²⁰ = 3.5 billion cells for a 20-DOF arm). **MMR-Elites** reformulates archive maintenance as submodular maximization using Maximum Marginal Relevance (MMR) from information retrieval:
 
@@ -15,11 +34,11 @@ Score(x) = (1 - λ) · fitness(x) + λ · d_min(x, Archive)
 
 This enables:
 - **O(K) fixed memory** regardless of behavior space dimension
-- **Uniform coverage** via explicit diversity optimization  
+- **Uniform coverage** via explicit diversity optimization
 - **O(K log K)** selection via lazy greedy algorithm
 - **Scalable to high-D** behavior spaces where MAP-Elites fails
 
-## 📊 Results
+## 📊 QD Benchmark Results
 
 MMR-Elites achieves **12x better uniformity** than MAP-Elites and **6x better than CVT-MAP-Elites** on a 20-DOF arm reaching task:
 
@@ -51,26 +70,13 @@ pip install -e .
 
 ### LLM Response Selection
 
-MMR-Elites works anywhere you need diverse, high-quality selections -- including text. Given 25 candidate responses to "What strategies help someone learn to code?" (generated and scored by Gemini 2.5 Flash), the selector picks 8 that cover distinct strategies while maintaining quality:
+See the results table above. To regenerate responses with your own Gemini API key:
 
 ```bash
 pip install -e ".[examples]"
-
-# Run the demo (uses pre-generated responses, no API key needed)
-python examples/llm_response_selection.py
-
-# Optionally regenerate responses with your own Gemini API key
 GEMINI_API_KEY=... python examples/generate_responses.py
+python examples/llm_response_selection.py
 ```
-
-Each response is scored individually (no order bias). MMR-Elites achieves **14% higher diversity** while maintaining **100% of naive top-K quality**:
-
-| Method | Mean Quality | Cosine Diversity |
-|--------|-------------|-----------------|
-| Naive Top-K | 1.000 | 0.634 |
-| **MMR-Elites** | **1.000** | **0.722** |
-
-Naive top-K selects semantically similar high-scoring responses. MMR-Elites covers a wider range of strategies -- project-based, debugging, formal education, automation, hackathons -- at no quality cost.
 
 ### QD Benchmarks
 
