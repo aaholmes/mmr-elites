@@ -3,7 +3,7 @@
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-In many settings one wants to choose a small subset from a large pool of candidates that is not only high-quality but also diverse. Selecting by quality alone produces redundancy: the best items tend to cluster together.
+In many settings one wants to choose a small subset from a large pool of candidate solutions that is not only high-quality but also diverse. Selecting by quality alone produces redundancy: the best items tend to cluster together.
 
 This repo implements an efficient algorithm that solves this by balancing quality with diversity, using an old idea from information retrieval called Maximal Marginal Relevance (MMR).
 
