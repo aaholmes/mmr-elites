@@ -30,7 +30,7 @@ python examples/llm_response_selection.py
 
 ## 🔬 How It Works
 
-Traditional Quality-Diversity (QD) algorithms like MAP-Elites discretize behavior space into grids, which scales exponentially with dimension (3²⁰ = 3.5 billion cells for a 20-DOF arm). MMR-Elites reformulates archive maintenance as submodular maximization, enabling:
+Traditional Quality-Diversity (QD) algorithms like MAP-Elites discretize behavior space into grids, which scales exponentially with dimension (3²⁰ = 3.5 billion cells for a 20-DOF arm). The key insight is that MAP-Elites' archive maintenance and MMR's document reranking are fundamentally the same problem: selecting a diverse, high-quality subset. MMR-Elites exploits this connection, reformulating archive maintenance as submodular maximization and enabling:
 - **O(K) fixed memory** regardless of behavior space dimension
 - **Uniform coverage** via explicit diversity optimization
 - **O(K log K)** selection via lazy greedy algorithm
@@ -57,7 +57,7 @@ In practice we don't really want to *maximize* diversity, but just make sure tha
 d_sat(b₁, b₂) = 1 - exp(-||b₁ - b₂|| / σ)
 ```
 
-This has a key advantage over Gaussian saturation `1 - exp(-||b₁-b₂||²/2σ²)`: it maintains a **linear gradient at small distances**, avoiding the "dead zone" where Gaussian saturation returns near-zero values for nearby solutions. This means the selector can still discriminate between close neighbors — critical for maintaining fine-grained diversity in dense regions of the archive.
+This has a key advantage over Gaussian saturation `1 - exp(-||b₁-b₂||²/2σ²)`: it maintains a **nonzero gradient at small distances**, avoiding the "dead zone" where Gaussian saturation returns near-zero values for nearby solutions. This means the selector can still discriminate between close neighbors — critical for maintaining fine-grained diversity in dense regions of the archive.
 
 ### Efficient Lazy Greedy Algorithm
 
@@ -66,6 +66,8 @@ Naive selection is O(NK²). We achieve O(K log K) in practice using:
 1. **Staleness tracking**: Cache `d_min` and only recompute when the archive changes
 2. **Priority queue**: Candidates sorted by upper-bound scores
 3. **Early termination**: Accept candidate if current score beats all upper bounds
+
+Because `d_min` can only decrease as more items are selected (submodularity), cached scores are upper bounds. In practice, the top candidate in the heap rarely needs recomputation, giving O(1) amortized work per selection and O(K log K) total from heap operations. Worst case remains O(NK).
 
 The Rust implementation achieves ~50x speedup over pure Python.
 
