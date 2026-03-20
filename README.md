@@ -28,19 +28,46 @@ pip install -e ".[examples]"
 python examples/llm_response_selection.py
 ```
 
-## 🔬 Key Insight
+## 🔬 How It Works
 
-Traditional Quality-Diversity (QD) algorithms like MAP-Elites discretize behavior space into grids, which scales exponentially with dimension (3²⁰ = 3.5 billion cells for a 20-DOF arm). **MMR-Elites** reformulates archive maintenance as submodular maximization using Maximum Marginal Relevance (MMR) from information retrieval:
-
-```
-Score(x) = (1 - λ) · fitness(x) + λ · d_min(x, Archive)
-```
-
-This enables:
+Traditional Quality-Diversity (QD) algorithms like MAP-Elites discretize behavior space into grids, which scales exponentially with dimension (3²⁰ = 3.5 billion cells for a 20-DOF arm). MMR-Elites reformulates archive maintenance as submodular maximization, enabling:
 - **O(K) fixed memory** regardless of behavior space dimension
 - **Uniform coverage** via explicit diversity optimization
 - **O(K log K)** selection via lazy greedy algorithm
 - **Scalable to high-D** behavior spaces where MAP-Elites fails
+
+### The MMR Selection Criterion
+
+At each generation, we select K survivors from the pool of archive + offspring by iteratively choosing the solution that maximizes:
+
+```
+x* = argmax[(1 - λ) · fitness(x) + λ · d_min(x, Selected)]
+```
+
+Where:
+- **λ = 0**: Pure fitness selection (top-K by fitness)
+- **λ = 1**: Pure diversity selection (maximize spread)
+- **λ = 0.5**: Balanced selection (recommended default)
+
+### Saturating Distance Functions
+
+In practice we don't really want to *maximize* diversity, but just make sure that the solutions are *different enough* from each other. So, we avoid using simple Euclidean distances between semantic embeddings as they grow unbounded especially in high-dimensional behavior spaces, making the diversity term dominate. Instead, we use **exponential saturation** to bound distances to [0, 1]:
+
+```
+d_sat(b₁, b₂) = 1 - exp(-||b₁ - b₂|| / σ)
+```
+
+This has a key advantage over Gaussian saturation `1 - exp(-||b₁-b₂||²/2σ²)`: it maintains a **linear gradient at small distances**, avoiding the "dead zone" where Gaussian saturation returns near-zero values for nearby solutions. This means the selector can still discriminate between close neighbors — critical for maintaining fine-grained diversity in dense regions of the archive.
+
+### Efficient Lazy Greedy Algorithm
+
+Naive selection is O(NK²). We achieve O(K log K) in practice using:
+
+1. **Staleness tracking**: Cache `d_min` and only recompute when the archive changes
+2. **Priority queue**: Candidates sorted by upper-bound scores
+3. **Early termination**: Accept candidate if current score beats all upper bounds
+
+The Rust implementation achieves ~50x speedup over pure Python.
 
 ## 📊 QD Benchmark Results
 
@@ -121,41 +148,6 @@ print(f"Max Fitness: {result.final_metrics['max_fitness']:.4f}")
 print(f"Uniformity: {result.final_metrics['uniformity_cv']:.4f}")
 ```
 
-## 🔬 How It Works
-
-### The MMR Selection Criterion
-
-At each generation, we select K survivors from the pool of archive + offspring by iteratively choosing the solution that maximizes:
-
-```
-x* = argmax[(1 - λ) · fitness(x) + λ · d_min(x, Selected)]
-```
-
-Where:
-- **λ = 0**: Pure fitness selection (top-K by fitness)
-- **λ = 1**: Pure diversity selection (maximize spread)
-- **λ = 0.5**: Balanced selection (recommended default)
-
-### Efficient Lazy Greedy Algorithm
-
-Naive selection is O(NK²). We achieve O(K log K) in practice using:
-
-1. **Staleness tracking**: Cache `d_min` and only recompute when the archive changes
-2. **Priority queue**: Candidates sorted by upper-bound scores
-3. **Early termination**: Accept candidate if current score beats all upper bounds
-
-The Rust implementation achieves ~50x speedup over pure Python.
-
-### Saturating Distance Functions
-
-In practice we don't really want to *maximize* diversity, but just make sure that the solutions are *different enough* from each other. So, we avoid using simple Euclidean distances between semantic embeddings as they grow unbounded especially in high-dimensional behavior spaces, making the diversity term dominate. Instead, we use **exponential saturation** to bound distances to [0, 1]:
-
-```
-d_sat(b₁, b₂) = 1 - exp(-||b₁ - b₂|| / σ)
-```
-
-This has a key advantage over Gaussian saturation `1 - exp(-||b₁-b₂||²/2σ²)`: it maintains a **linear gradient at small distances**, avoiding the "dead zone" where Gaussian saturation returns near-zero values for nearby solutions. This means the selector can still discriminate between close neighbors — critical for maintaining fine-grained diversity in dense regions of the archive.
-
 ## 📁 Project Structure
 
 ```
@@ -181,7 +173,7 @@ If you use this code, please cite:
   title={Quality-Diversity as Information Retrieval:
          Overcoming the Curse of Dimensionality with
          Maximum Marginal Relevance Selection of Elites},
-  author={Holmes, Adam},
+  author={Holmes, Adam A.},
   year={2026},
   note={arXiv preprint forthcoming}
 }
@@ -194,5 +186,6 @@ MIT License - see [LICENSE](LICENSE) for details.
 ## 🙏 Acknowledgments
 
 - The MMR formulation is inspired by Carbonell & Goldstein (1998)
+- MAP-Elites was introduced by Mouret & Clune (2015); reading about it in Risi et al.'s [*Neuroevolution*](https://neuroevolutionbook.com/) (MIT Press, 2025) is what led to thinking about alternatives that overcome the curse of dimensionality
 - Benchmark tasks adapted from the pyribs library
 - Submodular optimization insights from Krause & Golovin (2014)
