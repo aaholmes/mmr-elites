@@ -95,6 +95,7 @@ def print_results(
     print(f"\n{'=' * 70}")
     print(f"  {title}")
     print(f"{'=' * 70}")
+    print(f"  Top-1 quality:    {quality[indices[0]]:.3f}")
     print(f"  Mean quality:     {quality[indices].mean():.3f}")
     print(f"  Cosine diversity: {diversity:.3f}")
     print(f"{'=' * 70}")
@@ -158,17 +159,17 @@ def main(
     )
 
     # --- Summary comparison ---
-    quality_ratio = quality[mmr_indices].mean() / quality[topk_indices].mean()
+    topk_q = quality[topk_indices]
+    mmr_q = quality[mmr_indices]
+    quality_ratio = mmr_q.mean() / topk_q.mean()
 
     print("=" * 70)
     print("  Summary Comparison")
     print("=" * 70)
     print(f"  {'Metric':<22s} {'Top-K':>10s} {'MMR-Elites':>12s}")
     print(f"  {'-' * 22} {'-' * 10} {'-' * 12}")
-    print(
-        f"  {'Mean quality':<22s} {quality[topk_indices].mean():>10.3f}"
-        f" {quality[mmr_indices].mean():>12.3f}"
-    )
+    print(f"  {'Top-1 quality':<22s} {topk_q[0]:>10.3f} {mmr_q[0]:>12.3f}")
+    print(f"  {'Mean quality':<22s} {topk_q.mean():>10.3f} {mmr_q.mean():>12.3f}")
     print(f"  {'Cosine diversity':<22s} {topk_diversity:>10.3f} {mmr_diversity:>12.3f}")
     print("=" * 70)
     diversity_pct = (mmr_diversity / topk_diversity - 1) * 100

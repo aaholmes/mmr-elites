@@ -9,14 +9,14 @@
 
 Given 50 LLM-generated responses about startup fundraising, naive top-K selection grabs the highest-scoring responses -- but they cluster around similar themes. MMR-Elites selects responses that are both high-quality *and* semantically distinct:
 
-| Method | Mean Quality | Cosine Diversity | Quality Retained |
-|--------|-------------|-----------------|-----------------|
-| Naive Top-K (K=8) | 0.650 | 0.684 | -- |
-| **MMR-Elites (K=8)** | **0.641** | **0.729** | 99% |
-| Naive Top-K (K=15) | 0.562 | 0.649 | -- |
-| **MMR-Elites (K=15)** | **0.543** | **0.694** | 97% |
+| Method | Top-1 Quality | Mean Quality | Cosine Diversity |
+|--------|:------------:|:-----------:|:---------------:|
+| Naive Top-K (K=8) | 1.000 | 0.650 | 0.684 |
+| **MMR-Elites (K=8)** | **1.000** | **0.641** | **0.729** |
+| Naive Top-K (K=15) | 1.000 | 0.562 | 0.649 |
+| **MMR-Elites (K=15)** | **1.000** | **0.543** | **0.694** |
 
-MMR-Elites trades <3% quality for 7% higher diversity by swapping redundant high-scoring responses for semantically distinct ones -- e.g., replacing a second "investor research" response with one about "competitive rounds" or "warm intros". Each response is scored individually on a weighted rubric (novelty, precision, depth, completeness) to avoid order bias.
+Top-1 quality is always identical -- MMR's greedy selection guarantees the best item is picked first. Subsequent picks balance quality with diversity from already-selected items, trading <3% mean quality for 7% higher diversity. In practice, this means swapping redundant responses (e.g., a second "investor research" tip) for semantically distinct ones ("competitive rounds", "warm intros").
 
 ```bash
 # Try it yourself (pre-generated responses included, no API key needed)
