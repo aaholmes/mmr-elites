@@ -63,7 +63,14 @@ python examples/llm_response_selection.py
 GEMINI_API_KEY=... python examples/generate_responses.py
 ```
 
-Naive top-K selects semantically similar high-scoring responses. MMR-Elites covers a wider range of strategies -- project-based, social, formal, self-study -- at minimal quality cost.
+Each response is scored individually (no order bias). MMR-Elites achieves **14% higher diversity** while maintaining **100% of naive top-K quality**:
+
+| Method | Mean Quality | Cosine Diversity |
+|--------|-------------|-----------------|
+| Naive Top-K | 1.000 | 0.634 |
+| **MMR-Elites** | **1.000** | **0.722** |
+
+Naive top-K selects semantically similar high-scoring responses. MMR-Elites covers a wider range of strategies -- project-based, debugging, formal education, automation, hackathons -- at no quality cost.
 
 ### QD Benchmarks
 
