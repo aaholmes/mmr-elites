@@ -114,7 +114,7 @@ def print_results(
 
 
 def main(
-    k: int = 8, lambda_val: float = 0.5, responses_path: str | None = None
+    k: int = 10, lambda_val: float = 0.5, responses_path: str | None = None
 ) -> None:
     if responses_path is None:
         responses_path = os.path.join(os.path.dirname(__file__), "responses.json")
@@ -184,7 +184,7 @@ if __name__ == "__main__":
         description="LLM Response Selection with MMR-Elites"
     )
     parser.add_argument(
-        "--k", type=int, default=8, help="Number of responses to select"
+        "--k", type=int, default=10, help="Number of responses to select"
     )
     parser.add_argument(
         "--lambda", dest="lambda_val", type=float, default=0.5, help="MMR lambda"
