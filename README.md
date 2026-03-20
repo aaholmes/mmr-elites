@@ -148,7 +148,7 @@ The Rust implementation achieves ~50x speedup over pure Python.
 
 ### Saturating Distance Functions
 
-Raw Euclidean distance grows unboundedly in high-dimensional behavior spaces, making the diversity term dominate fitness. We use **exponential saturation** to bound distances to [0, 1]:
+In practice we don't really want to *maximize* diversity, but just make sure that the solutions are *different enough* from each other. So, we avoid using simple Euclidean distances between semantic embeddings as they grow unbounded especially in high-dimensional behavior spaces, making the diversity term dominate. Instead, we use **exponential saturation** to bound distances to [0, 1]:
 
 ```
 d_sat(b₁, b₂) = 1 - exp(-||b₁ - b₂|| / σ)
