@@ -3,18 +3,18 @@
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**Quality-Diversity as Information Retrieval: Overcoming the Curse of Dimensionality with Maximum Marginal Relevance Selection of Elites**
+In many settings one wants to choose a small subset from a large pool of candidates that is not only high-quality but also diverse. Selecting by quality alone produces redundancy: the best items tend to cluster together. This repo implements an efficient algorithm that solves this by balancing quality with diversity, using an old idea from information retrieval called Maximal Marginal Relevance (MMR). We call this algorithm MMR-Elites, in homage to both MMR and [MAP-Elites](https://arxiv.org/abs/1504.04909), a popular quality-diversity algorithm.
 
-## 🎯 Diverse, High-Quality Selection in One Step
+## 🎯 Example: LLM Response Selection
 
-Given 50 LLM-generated responses about startup fundraising, select the best 10. Naive top-K grabs the highest-scoring responses -- but they cluster around similar themes. MMR-Elites selects responses that are both high-quality *and* semantically distinct:
+As an example, consider selecting the 10 best responses from 50 LLM-generated pieces of advice about startup fundraising, where quality is scored by another LLM and semantic similarity is measured with an embedding model. Naive top-K grabs the highest-scoring responses, but they cluster around similar themes. MMR-Elites selects responses that are both high-quality *and* semantically distinct:
 
 | Method | Top-1 Quality | Mean Quality | Cosine Diversity |
 |--------|:------------:|:-----------:|:---------------:|
 | Naive Top-K | 1.000 | 0.620 | 0.653 |
 | **MMR-Elites** | **1.000** | **0.608** | **0.716** |
 
-Top-1 quality is always identical -- MMR's greedy selection guarantees the best item is picked first. Subsequent picks balance quality with diversity from already-selected items, trading 2% mean quality for **10% higher diversity**. In practice, this means swapping redundant responses (e.g., a second "investor research" tip) for semantically distinct ones ("competitive rounds", "warm intros").
+Top-1 quality is always identical: MMR's greedy selection guarantees the best item is picked first. Subsequent picks balance quality with diversity from already-selected items, trading 2% mean quality for **10% higher diversity**. In practice, this means swapping redundant responses (e.g., a second "investor research" tip) for semantically distinct ones ("competitive rounds", "warm intros").
 
 ```bash
 # Try it yourself (pre-generated responses included, no API key needed)
