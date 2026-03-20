@@ -35,6 +35,9 @@ examples = [
 [project.scripts]
 mmr-elites = "mmr_elites.cli:main"
 
+[tool.black]
+target-version = ["py38"]
+
 [tool.isort]
 profile = "black"
 
