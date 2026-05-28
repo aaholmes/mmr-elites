@@ -34,7 +34,7 @@ Traditional Quality-Diversity (QD) algorithms like MAP-Elites discretize behavio
 - **O(K) fixed memory** regardless of behavior space dimension
 - **Uniform coverage** via explicit diversity optimization
 - **O(K log K)** selection via lazy greedy algorithm
-- **Scalable to high-D** behavior spaces where MAP-Elites fails
+- **Scalable to high-D** behavior spaces where MAP-Elites becomes computationally expensive
 
 ### The MMR Selection Criterion
 
