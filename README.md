@@ -3,170 +3,101 @@
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-In many problems it is not enough to simply find the single "best" solution, but to find a diverse set of good solutions. Selecting by quality alone produces redundancy: the best items tend to cluster together.
+Many search problems want not the single best solution but a set of solutions that are each good *and* different from one another. Picking by quality alone gives you redundancy — the top items tend to look alike. MMR-Elites picks a high-quality, diverse subset using **Maximum Marginal Relevance (MMR)**, an idea borrowed from information retrieval, where each pick maximizes
 
-This repo implements an efficient algorithm that solves this by balancing quality with diversity, using an old idea from information retrieval called Maximal Marginal Relevance (MMR).
+```
+score(x) = (1 − λ) · fitness(x)  +  λ · distance(x, already-picked)
+```
 
-We call this algorithm MMR-Elites, in homage to both MMR and [MAP-Elites](https://arxiv.org/abs/1504.04909), a popular quality-diversity algorithm.
+`λ` dials between pure quality (`λ=0`, top-K by fitness) and pure diversity (`λ=1`, maximize spread). The name is a nod to [MAP-Elites](https://arxiv.org/abs/1504.04909), the quality-diversity (QD) algorithm this builds on; MMR-Elites replaces its fixed grid with grid-free greedy selection, so it keeps a fixed-size archive and scales to high-dimensional behavior spaces where a grid would blow up (3²⁰ ≈ 3.5 billion cells for a 20-joint arm).
 
-## 🎯 Example: LLM Response Selection
+## Two ways to use it
 
-As an example, consider selecting the 10 best responses from 50 LLM-generated pieces of advice about startup fundraising, where quality is scored by another LLM and semantic similarity is measured with an embedding model.
+**1. As a one-shot diverse selector.** Pick the *k* best-but-distinct items from a pool. For example, selecting 10 of 50 LLM-generated pieces of fundraising advice (quality scored by another LLM, similarity by an embedding model):
 
-Naive top-K grabs the highest-scoring responses, but they cluster around similar themes. MMR-Elites selects responses that are both high-quality *and* semantically distinct:
+| Method | Mean Quality | Diversity (cosine) |
+|--------|:-----------:|:-----------------:|
+| Naive Top-K | 0.620 | 0.653 |
+| **MMR-Elites** | 0.608 | **0.716** |
 
-| Method | Top-1 Quality | Mean Quality | Cosine Diversity |
-|--------|:------------:|:-----------:|:---------------:|
-| Naive Top-K | 1.000 | 0.620 | 0.653 |
-| **MMR-Elites** | **1.000** | **0.608** | **0.716** |
-
-Top-1 quality is always identical: MMR's greedy selection guarantees the best item is picked first. Subsequent picks balance quality with diversity from already-selected items, trading 2% mean quality for **10% higher diversity**. In practice, this means swapping redundant responses (e.g., a second "investor research" tip) for semantically distinct ones ("competitive rounds", "warm intros").
+Both pick the same #1 item (greedy MMR always takes the best first); MMR then trades 2% mean quality for 10% more diversity, swapping a near-duplicate tip for a genuinely different one.
 
 ```bash
-# Try it yourself (pre-generated responses included, no API key needed)
 pip install -e ".[examples]"
-python examples/llm_response_selection.py
+python examples/llm_response_selection.py   # pre-generated data, no API key
 ```
 
-## 🔬 How It Works
+**2. As the selection step of an evolutionary algorithm.** Each generation, keep K survivors from the archive plus new offspring. Here diversity is not just a nice output property — it makes the *optimization itself* work better, which is the more surprising claim and the one worth dwelling on.
 
-Traditional Quality-Diversity (QD) algorithms like MAP-Elites discretize behavior space into grids, which scales exponentially with dimension (3²⁰ = 3.5 billion cells for a 20-DOF arm). The key insight is that MAP-Elites' archive maintenance and MMR's document reranking are fundamentally the same problem: selecting a diverse, high-quality subset. MMR-Elites exploits this connection, reformulating archive maintenance as greedy quality-diversity set selection and enabling:
-- **O(K) fixed memory** regardless of behavior space dimension
-- **Uniform coverage** via explicit diversity optimization
-- **Fast exact selection** via a lazy greedy algorithm (typically O(1) re-scoring per pick; worst case O(N·K))
-- **Scalable to high-D** behavior spaces where MAP-Elites becomes computationally expensive
+## Why diversity helps even when you only care about the best solution
 
-### Why diversity helps even pure optimization
+Judging a selector by single-generation quality is misleading: a fitness-only selector always wins *that* comparison. The payoff from spending part of the budget on diversity is long-run. Diverse survivors are **stepping stones** — on a *deceptive* problem (where the route to the global optimum dips through low-fitness regions), greedy fitness selection climbs straight into a local optimum and stays there, while a selector that keeps behaviorally distinct individuals preserves the lineages that eventually get around it.
 
-MMR-Elites is the *selection step* of an evolutionary algorithm: each generation, K survivors are chosen from the current archive plus new offspring. Comparing selection methods on quality alone is misleading — a fitness-only selector always looks best on that axis *within one generation*. The reason to spend part of the selection budget on diversity is long-run: diverse survivors are **stepping stones**. On deceptive landscapes (where the path to the global optimum passes through low-fitness regions), greedy selection converges to a local optimum, while a selector that preserves behaviorally distinct individuals keeps open the lineages that eventually beat it. This is the central insight behind MAP-Elites and quality-diversity optimization in general; λ makes the quality/diversity allocation explicit and tunable, and the right balance is the one that maximizes *final* performance after many generations, not per-generation quality. The `experiments/long_run_evolution.py` script tests exactly this on the classic MAP-Elites arm task (Mouret & Clune 2015): a 20-DOF arm reaching a target hidden behind an obstacle, with the 2-D end-effector position as the behavior descriptor. Collisions zero the fitness, so the direct path is a trap. λ=0 is pure top-K-by-fitness evolution with the identical mutation operator and budget — any gain at λ>0 comes from diversity in selection alone. After 2,000 generations (5 seeds):
+This is exactly the finding of Lehman & Stanley's *[Abandoning Objectives: Evolution Through the Search for Novelty Alone](https://doi.org/10.1162/EVCO_a_00025)* (2011): when the objective is a poor compass, searching for novelty reaches the objective faster than aiming at it. MMR-Elites turns that all-or-nothing choice into a continuous `λ` knob.
 
-| Selection | Final max fitness | Seeds reaching 95% of best | Mean generations to reach it |
-|---|---|---|---|
-| MMR λ=0 (pure fitness) | 0.700 ± 0.000 | 0/5 | — |
-| MMR λ=0.25 | 0.700 ± 0.000 | 0/5 | — |
-| MMR λ=0.5 | 0.700 ± 0.000 | 0/5 | — |
-| MMR λ=0.75 | 0.879 ± 0.049 | 1/5 | 1,750 |
-| **MMR λ=1 (pure diversity)** | **0.976 ± 0.010** | **5/5** | **810** |
-| MAP-Elites (32×32 grid) | 0.920 ± 0.048 | 3/5 | 1,667 |
+**A clean demonstration.** A 20-joint arm must reach a target hidden behind a wall; touching the wall scores 0.70, getting around it scores ~1.0 (2-D end-effector position as the behavior descriptor, the classic MAP-Elites arm setup but with an added obstacle to make it deceptive). `λ=0` is ordinary fitness-only evolution with the identical mutation operator and budget, so any improvement at higher `λ` comes from diversity in selection *alone*. After 2,000 generations (5 seeds):
 
-Fitness-dominated selection (λ ≤ 0.5) gets stuck at exactly 0.700 — the fitness of touching the obstacle wall — on every seed. Pure diversity selection, which never looks at fitness when choosing survivors, finds the best solutions on every seed, faster than MAP-Elites. This is the stepping-stone effect in its starkest form (cf. novelty search): on deceptive problems, optimizing fitness directly is the worst way to obtain it.
+| Selection | Final best fitness | Seeds that got around the wall |
+|---|:---:|:---:|
+| `λ=0` (pure fitness) | 0.700 ± 0.000 | 0 / 5 |
+| `λ=0.5` (balanced) | 0.700 ± 0.000 | 0 / 5 |
+| **`λ=1` (diversity-driven)** | **0.976 ± 0.010** | **5 / 5** |
+| MAP-Elites (32×32 grid) | 0.920 ± 0.048 | 3 / 5 |
 
-### The MMR Selection Criterion
+Every fitness-dominated run stalls at exactly 0.700 — pinned against the wall — on every seed. Diversity-driven selection solves it every time, and faster than MAP-Elites. (`λ=1` here is novelty-driven but still retains the single best-so-far individual, so quality never regresses.)
 
-At each generation, we select K survivors from the pool of archive + offspring by iteratively choosing the solution that maximizes:
+![Best evolved arm at each wall height](docs/evolved_solutions.png)
 
-```
-x* = argmax[(1 - λ) · fitness(x) + λ · d_min(x, Selected)]
-```
+The best evolved arm at each wall height makes this physical: the fitness-only arm (red) jams flat against the wall, while the diversity-driven arm (green) arcs over it to reach the target. For the *tall* wall, even the diversity-driven arm only gets over the top — the 20 links aren't long enough to curl back down to the target on the far side, which is why no setting fully solves that case. Regenerate with `python experiments/plot_evolved_solutions.py`.
 
-Where:
-- **λ = 0**: Pure fitness selection (top-K by fitness)
-- **λ = 1**: Pure diversity selection (maximize spread)
-- **λ = 0.5**: Balanced selection (default; but see the deceptive-landscape results below — the best λ is task-dependent, and deceptive problems reward much higher λ)
+**The best `λ` depends on how deceptive the task is.** Sweeping `λ` against wall height shows `λ*` (the optimum) sliding from the interior toward 1 as deception grows — and on a non-deceptive version (no wall) a middling `λ` that keeps some fitness pressure is best. Reproduce with `experiments/lambda_deception_sweep.py`.
 
-### Saturating Distance Functions
+| Wall height (deception) | λ=0 | λ=0.5 | λ=0.8 | λ=0.9 | λ=0.95 | λ=1 | best λ |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| none (not deceptive) | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 0.999 | ≤0.95 |
+| short wall | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 0.998 | ≤0.95 |
+| medium wall | 0.700 | 0.700 | 0.953 | 0.962 | 0.959 | **0.976** | **1.0** |
+| tall wall | 0.700 | 0.700 | 0.700 | 0.702 | 0.746 | **0.757** | **1.0** |
 
-In practice we don't really want to *maximize* diversity, but just make sure that the solutions are *different enough* from each other. So, we avoid using simple Euclidean distances between semantic embeddings as they grow unbounded especially in high-dimensional behavior spaces, making the diversity term dominate. Instead, we use **exponential saturation** to bound distances to [0, 1]:
+Final best fitness, mean over 5 seeds. Reading down each column: the more deceptive the task, the higher the `λ` you need. Reading the top rows: when the task is *not* deceptive, going all the way to `λ=1` is slightly counterproductive — a little fitness pressure helps. The objective is worth following when it points the right way, and worth ignoring when it doesn't.
 
-```
-d_sat(b₁, b₂) = 1 - exp(-||b₁ - b₂|| / σ)
-```
+## How the selection works, and why it's fast
 
-This has a key advantage over Gaussian saturation `1 - exp(-||b₁-b₂||²/2σ²)`: it maintains a **nonzero gradient at small distances**, avoiding the "dead zone" where Gaussian saturation returns near-zero values for nearby solutions. This means the selector can still discriminate between close neighbors — critical for maintaining fine-grained diversity in dense regions of the archive.
+Naive greedy MMR costs O(NK²) distance computations. The Rust backend computes the **identical** selection far faster with a lazy priority queue: because each candidate's distance to the chosen set can only shrink as the set grows, cached scores stay valid as upper bounds, so most candidates are accepted without recomputation (worst case O(N·K); roughly an order of magnitude faster than a vectorized NumPy greedy in practice). For high-dimensional or embedding behavior spaces, an optional saturating distance `1 − exp(−‖b₁−b₂‖/σ)` bounds the diversity term so it can't dominate fitness.
 
-### Efficient Lazy Greedy Algorithm
+## QD benchmark (20-joint arm, 2-D behavior space, 10 seeds)
 
-Naive selection is O(NK²). The lazy variant returns the identical selection far faster in practice using:
-
-1. **Staleness tracking**: Cache `d_min` and only recompute when the archive changes
-2. **Priority queue**: Candidates sorted by upper-bound scores
-3. **Early termination**: Accept candidate if current score beats all upper bounds
-
-Because `d_min` can only decrease as more items are selected, cached scores are valid upper bounds. In practice, the top candidate in the heap rarely needs recomputation, giving near-O(1) amortized work per selection plus heap operations. Worst case remains O(N·K).
-
-The Rust implementation is roughly an order of magnitude faster than a vectorized NumPy greedy, and far faster than a naive Python loop.
-
-## 📊 QD Benchmark Results
-
-MMR-Elites achieves **~8x better uniformity** than both MAP-Elites and CVT-MAP-Elites on a 20-DOF arm reaching task (10 seeds, 2,000 generations, K = 1,000, λ = 0.5):
-
-| Algorithm | QD-Score@K* | Uniformity (CV↓) | Archive Size |
-|-----------|------------|------------------|--------------|
+| Algorithm | QD-Score@K\* | Uniformity (CV↓) | Archive Size |
+|-----------|:-----------:|:----------------:|:------------:|
 | **MMR-Elites** | 663.7 ± 2.1 | **0.059 ± 0.002** | 1,000 |
 | MAP-Elites | 675.0 ± 5.0 | 0.455 ± 0.010 | 84,035 |
 | CVT-MAP-Elites | 634.9 ± 4.7 | 0.467 ± 0.029 | 913 |
 | Random (top-K) | 633.2 ± 0.9 | 0.068 ± 0.002 | 1,000 |
 
-*\*QD-Score@K sums the top K = 1,000 fitness values, so algorithms with different archive sizes are compared at the same budget (MAP-Elites' raw whole-archive QD-Score is 31,057 over its 84k cells). Lower uniformity CV = more uniform coverage. MAP-Elites reaches slightly higher quality at the budget but with ~8x worse uniformity and an archive 84x over budget; fitness-only random search is uniform here because the 20-D descriptor space is far too large for K points to cluster, but it discovers no better solutions than its samples. Regenerate with `mmr-elites benchmark --full`.*
+\*Top-K=1,000 fitness sum, so methods are compared at the same budget (MAP-Elites' raw whole-archive score is 31,057 across 84k cells). Lower uniformity CV = more even coverage. MMR-Elites matches the others on quality-at-budget while covering behavior space ~8× more evenly with a 1,000-item archive instead of 84,000. Regenerate with `mmr-elites benchmark --full`.
 
-## 🚀 Quick Start
-
-### Installation
+## Install & run
 
 ```bash
-# Clone repository
-git clone https://github.com/aaholmes/mmr-elites.git
-cd mmr-elites
-
-# Install Rust backend (required)
-pip install maturin
-maturin develop --release
-
-# Install Python package
+git clone https://github.com/aaholmes/mmr-elites.git && cd mmr-elites
+pip install maturin && maturin develop --release   # build the Rust backend
 pip install -e .
+
+mmr-elites run --task arm --generations 500 --seed 42   # single run
+mmr-elites benchmark --quick                            # compare all algorithms
 ```
-
-### LLM Response Selection
-
-See the results table above. To regenerate responses with your own Gemini API key:
-
-```bash
-pip install -e ".[examples]"
-GEMINI_API_KEY=... python examples/generate_responses.py
-python examples/llm_response_selection.py
-```
-
-### QD Benchmarks
-
-```bash
-# Run a quick experiment
-mmr-elites run --task arm --generations 500 --seed 42
-
-# Compare all algorithms
-mmr-elites benchmark --quick
-
-# Dimensionality scaling study
-mmr-elites compare -d 5 -d 10 -d 20 -d 50 -d 100  # run from the repo root
-
-```
-
-### Python API
 
 ```python
 from mmr_elites.tasks.arm import ArmTask
 from mmr_elites.algorithms import run_mmr_elites
 
-# Create task
 task = ArmTask(n_dof=20, use_highdim_descriptor=True)
-
-# Run MMR-Elites (returns a dict of results and history)
-result = run_mmr_elites(
-    task,
-    archive_size=1000,
-    generations=2000,
-    lambda_val=0.5,  # Balance fitness and diversity
-    seed=42
-)
-
-metrics = result["final_metrics"]
-print(f"QD-Score: {metrics['qd_score']:.2f}")
-print(f"Max Fitness: {metrics['max_fitness']:.4f}")
-print(f"Uniformity: {metrics['uniformity_cv']:.4f}")
+result = run_mmr_elites(task, archive_size=1000, generations=2000,
+                        lambda_val=0.5, seed=42)   # returns a dict
+print(result["final_metrics"]["max_fitness"])
 ```
 
-## 📖 Citation
-
-If you use this code, please cite:
+## Citation & credits
 
 ```bibtex
 @software{holmes2026mmrelites,
@@ -177,13 +108,4 @@ If you use this code, please cite:
 }
 ```
 
-## 📜 License
-
-MIT License - see [LICENSE](LICENSE) for details.
-
-## 🙏 Acknowledgments
-
-- The MMR formulation is inspired by Carbonell & Goldstein (1998)
-- MAP-Elites was introduced by Mouret & Clune (2015); reading about it in Risi et al.'s [*Neuroevolution*](https://neuroevolutionbook.com/) (MIT Press, 2025) is what led to thinking about alternatives that overcome the curse of dimensionality
-- Benchmark tasks adapted from the pyribs library
-- Submodular optimization insights from Krause & Golovin (2014)
+MIT licensed (see [LICENSE](LICENSE)). Builds on MMR (Carbonell & Goldstein, 1998), MAP-Elites (Mouret & Clune, 2015), and novelty search (Lehman & Stanley, 2011); benchmark tasks adapted from [pyribs](https://pyribs.org). MAP-Elites came to the author's attention via Risi et al.'s [*Neuroevolution*](https://neuroevolutionbook.com/) (MIT Press, 2025).
