@@ -38,7 +38,18 @@ Traditional Quality-Diversity (QD) algorithms like MAP-Elites discretize behavio
 
 ### Why diversity helps even pure optimization
 
-MMR-Elites is the *selection step* of an evolutionary algorithm: each generation, K survivors are chosen from the current archive plus new offspring. Comparing selection methods on quality alone is misleading — a fitness-only selector always looks best on that axis *within one generation*. The reason to spend part of the selection budget on diversity is long-run: diverse survivors are **stepping stones**. On deceptive landscapes (where the path to the global optimum passes through low-fitness regions), greedy selection converges to a local optimum, while a selector that preserves behaviorally distinct individuals keeps open the lineages that eventually beat it. This is the central insight behind MAP-Elites and quality-diversity optimization in general; λ makes the quality/diversity allocation explicit and tunable, and the right balance is the one that maximizes *final* performance after many generations, not per-generation quality. The `experiments/long_run_evolution.py` script tests exactly this on a deceptive variant of the arm task (target hidden behind an obstacle).
+MMR-Elites is the *selection step* of an evolutionary algorithm: each generation, K survivors are chosen from the current archive plus new offspring. Comparing selection methods on quality alone is misleading — a fitness-only selector always looks best on that axis *within one generation*. The reason to spend part of the selection budget on diversity is long-run: diverse survivors are **stepping stones**. On deceptive landscapes (where the path to the global optimum passes through low-fitness regions), greedy selection converges to a local optimum, while a selector that preserves behaviorally distinct individuals keeps open the lineages that eventually beat it. This is the central insight behind MAP-Elites and quality-diversity optimization in general; λ makes the quality/diversity allocation explicit and tunable, and the right balance is the one that maximizes *final* performance after many generations, not per-generation quality. The `experiments/long_run_evolution.py` script tests exactly this on the classic MAP-Elites arm task (Mouret & Clune 2015): a 20-DOF arm reaching a target hidden behind an obstacle, with the 2-D end-effector position as the behavior descriptor. Collisions zero the fitness, so the direct path is a trap. λ=0 is pure top-K-by-fitness evolution with the identical mutation operator and budget — any gain at λ>0 comes from diversity in selection alone. After 2,000 generations (5 seeds):
+
+| Selection | Final max fitness | Seeds reaching 95% of best | Mean generations to reach it |
+|---|---|---|---|
+| MMR λ=0 (pure fitness) | 0.700 ± 0.000 | 0/5 | — |
+| MMR λ=0.25 | 0.700 ± 0.000 | 0/5 | — |
+| MMR λ=0.5 | 0.700 ± 0.000 | 0/5 | — |
+| MMR λ=0.75 | 0.879 ± 0.049 | 1/5 | 1,750 |
+| **MMR λ=1 (pure diversity)** | **0.976 ± 0.010** | **5/5** | **810** |
+| MAP-Elites (32×32 grid) | 0.920 ± 0.048 | 3/5 | 1,667 |
+
+Fitness-dominated selection (λ ≤ 0.5) gets stuck at exactly 0.700 — the fitness of touching the obstacle wall — on every seed. Pure diversity selection, which never looks at fitness when choosing survivors, finds the best solutions on every seed, faster than MAP-Elites. This is the stepping-stone effect in its starkest form (cf. novelty search): on deceptive problems, optimizing fitness directly is the worst way to obtain it.
 
 ### The MMR Selection Criterion
 
@@ -51,7 +62,7 @@ x* = argmax[(1 - λ) · fitness(x) + λ · d_min(x, Selected)]
 Where:
 - **λ = 0**: Pure fitness selection (top-K by fitness)
 - **λ = 1**: Pure diversity selection (maximize spread)
-- **λ = 0.5**: Balanced selection (recommended default)
+- **λ = 0.5**: Balanced selection (default; but see the deceptive-landscape results below — the best λ is task-dependent, and deceptive problems reward much higher λ)
 
 ### Saturating Distance Functions
 
