@@ -13,11 +13,11 @@ cd mmr-elites
 python -m venv venv
 source venv/bin/activate  # or `venv\Scripts\activate` on Windows
 
-# Install development dependencies
-pip install -e ".[dev]"
-
-# Build Rust backend
+# Build the Rust backend and install the package + dev dependencies
+# (maturin develop must run inside the virtualenv)
+pip install maturin
 maturin develop --release
+pip install -e ".[dev]"
 
 # Run tests
 pytest tests/ -v

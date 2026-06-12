@@ -1,6 +1,6 @@
 # MMR-Elites: Balancing fitness and diversity in evolutionary algorithms
 
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 In many problems it is not enough to simply find the single "best" solution, but to find a diverse set of good solutions. Selecting by quality alone produces redundancy: the best items tend to cluster together.
@@ -30,10 +30,10 @@ python examples/llm_response_selection.py
 
 ## 🔬 How It Works
 
-Traditional Quality-Diversity (QD) algorithms like MAP-Elites discretize behavior space into grids, which scales exponentially with dimension (3²⁰ = 3.5 billion cells for a 20-DOF arm). The key insight is that MAP-Elites' archive maintenance and MMR's document reranking are fundamentally the same problem: selecting a diverse, high-quality subset. MMR-Elites exploits this connection, reformulating archive maintenance as submodular maximization and enabling:
+Traditional Quality-Diversity (QD) algorithms like MAP-Elites discretize behavior space into grids, which scales exponentially with dimension (3²⁰ = 3.5 billion cells for a 20-DOF arm). The key insight is that MAP-Elites' archive maintenance and MMR's document reranking are fundamentally the same problem: selecting a diverse, high-quality subset. MMR-Elites exploits this connection, reformulating archive maintenance as greedy quality-diversity set selection and enabling:
 - **O(K) fixed memory** regardless of behavior space dimension
 - **Uniform coverage** via explicit diversity optimization
-- **O(K log K)** selection via lazy greedy algorithm
+- **Fast exact selection** via a lazy greedy algorithm (typically O(1) re-scoring per pick; worst case O(N·K))
 - **Scalable to high-D** behavior spaces where MAP-Elites becomes computationally expensive
 
 ### The MMR Selection Criterion
@@ -61,28 +61,28 @@ This has a key advantage over Gaussian saturation `1 - exp(-||b₁-b₂||²/2σ�
 
 ### Efficient Lazy Greedy Algorithm
 
-Naive selection is O(NK²). We achieve O(K log K) in practice using:
+Naive selection is O(NK²). The lazy variant returns the identical selection far faster in practice using:
 
 1. **Staleness tracking**: Cache `d_min` and only recompute when the archive changes
 2. **Priority queue**: Candidates sorted by upper-bound scores
 3. **Early termination**: Accept candidate if current score beats all upper bounds
 
-Because `d_min` can only decrease as more items are selected (submodularity), cached scores are upper bounds. In practice, the top candidate in the heap rarely needs recomputation, giving O(1) amortized work per selection and O(K log K) total from heap operations. Worst case remains O(NK).
+Because `d_min` can only decrease as more items are selected, cached scores are valid upper bounds. In practice, the top candidate in the heap rarely needs recomputation, giving near-O(1) amortized work per selection plus heap operations. Worst case remains O(N·K).
 
-The Rust implementation achieves ~50x speedup over pure Python.
+The Rust implementation is roughly an order of magnitude faster than a vectorized NumPy greedy, and far faster than a naive Python loop.
 
 ## 📊 QD Benchmark Results
 
 MMR-Elites achieves **12x better uniformity** than MAP-Elites and **6x better than CVT-MAP-Elites** on a 20-DOF arm reaching task:
 
-| Algorithm | QD-Score@K | Uniformity (CV↓) | Archive Size |
+| Algorithm | QD-Score* | Uniformity (CV↓) | Archive Size |
 |-----------|-----------|------------------|--------------|
 | **MMR-Elites** | 552.3 ± 0.2 | **0.066** | 1,000 |
 | CVT-MAP-Elites | 497.6 ± 0.9 | 0.417 | 758 |
 | MAP-Elites | 7468.6 ± 34.1 | 0.832 | 22,825 |
 | Random | 583.0 ± 1.2 | 0.789 | 1,000 |
 
-*Lower uniformity CV = more uniform coverage. MAP-Elites achieves higher raw QD-Score due to unbounded archive, but with poor uniformity.*
+*\*QD-Score sums fitness over the whole archive, so MAP-Elites' larger value reflects its unbounded 22,825-cell archive rather than a per-budget advantage; the fixed-K algorithms' scores are directly comparable to each other. Lower uniformity CV = more uniform coverage.*
 
 ## 🚀 Quick Start
 
@@ -121,10 +121,8 @@ mmr-elites run --task arm --generations 500 --seed 42
 mmr-elites benchmark --quick
 
 # Dimensionality scaling study
-mmr-elites compare --dimensions 5 10 20 50 100
+mmr-elites compare -d 5 -d 10 -d 20 -d 50 -d 100  # run from the repo root
 
-# Launch interactive demo
-mmr-elites demo
 ```
 
 ### Python API
@@ -136,7 +134,7 @@ from mmr_elites.algorithms import run_mmr_elites
 # Create task
 task = ArmTask(n_dof=20, use_highdim_descriptor=True)
 
-# Run MMR-Elites
+# Run MMR-Elites (returns a dict of results and history)
 result = run_mmr_elites(
     task,
     archive_size=1000,
@@ -145,9 +143,10 @@ result = run_mmr_elites(
     seed=42
 )
 
-print(f"QD-Score: {result.final_metrics['qd_score']:.2f}")
-print(f"Max Fitness: {result.final_metrics['max_fitness']:.4f}")
-print(f"Uniformity: {result.final_metrics['uniformity_cv']:.4f}")
+metrics = result["final_metrics"]
+print(f"QD-Score: {metrics['qd_score']:.2f}")
+print(f"Max Fitness: {metrics['max_fitness']:.4f}")
+print(f"Uniformity: {metrics['uniformity_cv']:.4f}")
 ```
 
 ## 📖 Citation
