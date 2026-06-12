@@ -95,20 +95,14 @@ class TestEvalOneAnt:
 
 class TestAntTask:
     def test_init_without_gym(self):
-        """Test initialization when gymnasium is available but we mock it."""
+        """Run the REAL __init__ with gym unavailable and check its defaults."""
         with patch("mmr_elites.tasks.ant.GYM_AVAILABLE", False):
-            task = AntTask.__new__(AntTask)
-            task.input_dim = 27
-            task.output_dim = 8
-            task.policy = TanhMLP(27, 8, hidden_dim=64)
-            task.param_count = task.policy.total_weights
-            task._genome_dim = task.param_count
-            task._desc_dim = 2
-            task.workers = 4
-            task.executor = None
-
+            task = AntTask()
+            assert task.input_dim == 27
+            assert task.output_dim == 8
             assert task.genome_dim == task.param_count
             assert task.desc_dim == 2
+            assert task.executor is None
 
     def test_genome_dim_property(self):
         with patch("mmr_elites.tasks.ant.GYM_AVAILABLE", False):
@@ -165,30 +159,23 @@ class TestAntTask:
             # Should not create a new executor
             assert task.executor is mock_executor
 
-    def test_init_without_gym_available(self):
+    def test_init_without_gym_custom_workers(self):
+        """The real gym-unavailable __init__ honors constructor arguments."""
         with patch("mmr_elites.tasks.ant.GYM_AVAILABLE", False):
-            task = AntTask.__new__(AntTask)
-            # Simulate what __init__ does when GYM_AVAILABLE is False
-            task.input_dim = 27
-            task.output_dim = 8
-            task.policy = TanhMLP(27, 8, hidden_dim=64)
-            task.param_count = task.policy.total_weights
-            task._genome_dim = task.param_count
-            task._desc_dim = 2
-            task.workers = 4
-            task.executor = None
-            assert task.input_dim == 27
-            assert task.output_dim == 8
-            assert task.desc_dim == 2
+            task = AntTask(workers=2)
+            assert task.workers == 2
+            assert task.policy.total_weights == task.param_count
+            assert task.genome_dim == task.param_count
 
     def test_init_with_gym_available(self):
         """Test __init__ path when gym is available using a mock environment."""
         mock_env = MagicMock()
         mock_env.observation_space.shape = (27,)
         mock_env.action_space.shape = (8,)
-        with patch("mmr_elites.tasks.ant.GYM_AVAILABLE", True), patch(
-            "mmr_elites.tasks.ant.gym"
-        ) as mock_gym:
+        with (
+            patch("mmr_elites.tasks.ant.GYM_AVAILABLE", True),
+            patch("mmr_elites.tasks.ant.gym") as mock_gym,
+        ):
             mock_gym.make.return_value = mock_env
             task = AntTask(workers=2)
             assert task.input_dim == 27
@@ -199,9 +186,10 @@ class TestAntTask:
 
     def test_start_creates_executor(self):
         """Test that start() creates a ProcessPoolExecutor when gym is available."""
-        with patch("mmr_elites.tasks.ant.GYM_AVAILABLE", True), patch(
-            "mmr_elites.tasks.ant.ProcessPoolExecutor"
-        ) as MockPPE:
+        with (
+            patch("mmr_elites.tasks.ant.GYM_AVAILABLE", True),
+            patch("mmr_elites.tasks.ant.ProcessPoolExecutor") as MockPPE,
+        ):
             task = AntTask.__new__(AntTask)
             task.executor = None
             task.workers = 2
@@ -241,9 +229,10 @@ class TestWorkerInit:
 
         original_env = ant_module._env
         mock_env = MagicMock()
-        with patch("mmr_elites.tasks.ant.GYM_AVAILABLE", True), patch(
-            "mmr_elites.tasks.ant.gym"
-        ) as mock_gym:
+        with (
+            patch("mmr_elites.tasks.ant.GYM_AVAILABLE", True),
+            patch("mmr_elites.tasks.ant.gym") as mock_gym,
+        ):
             mock_gym.make.return_value = mock_env
             worker_init()
             assert ant_module._env is mock_env

@@ -18,7 +18,7 @@ class TestEvolutionLoop:
 
     def test_mmr_elites_fitness_improves(self, arm_task):
         """MMR-Elites should improve fitness over generations."""
-        pytest.importorskip("mmr_elites_rs")
+        pytest.importorskip("mmr_elites.mmr_elites_rs")
         from mmr_elites.algorithms.mmr_elites import run_mmr_elites
 
         result = run_mmr_elites(
@@ -74,7 +74,7 @@ class TestEvolutionLoop:
 
     def test_reproducibility(self, arm_task):
         """Same seed should produce same results."""
-        pytest.importorskip("mmr_elites_rs")
+        pytest.importorskip("mmr_elites.mmr_elites_rs")
         from mmr_elites.algorithms.mmr_elites import run_mmr_elites
 
         result1 = run_mmr_elites(
@@ -106,14 +106,19 @@ class TestEvolutionLoop:
 class TestAlgorithmComparison:
     """Tests comparing algorithms."""
 
-    def test_mmr_elites_better_uniformity(self, arm_task):
-        """MMR-Elites should achieve better uniformity than MAP-Elites."""
-        pytest.importorskip("mmr_elites_rs")
+    def test_mmr_elites_better_uniformity(self, arm_task_20dof):
+        """MMR-Elites achieves lower (better) uniformity CV than MAP-Elites.
+
+        Run at 20 DOF: in high-dimensional behavior spaces the uniformity
+        advantage is large and stable. (At 5 DOF it is a known limitation
+        that MMR-Elites can be less uniform, so that regime is not asserted.)
+        """
+        pytest.importorskip("mmr_elites.mmr_elites_rs")
         from mmr_elites.algorithms.map_elites import run_map_elites
         from mmr_elites.algorithms.mmr_elites import run_mmr_elites
 
         mmr_result = run_mmr_elites(
-            task=arm_task,
+            task=arm_task_20dof,
             archive_size=100,
             generations=200,
             batch_size=50,
@@ -123,10 +128,10 @@ class TestAlgorithmComparison:
         )
 
         me_result = run_map_elites(
-            task=arm_task,
+            task=arm_task_20dof,
             generations=200,
             batch_size=50,
-            bins_per_dim=5,
+            bins_per_dim=3,
             mutation_sigma=0.1,
             seed=42,
         )
@@ -135,6 +140,7 @@ class TestAlgorithmComparison:
         mmr_cv = mmr_result["final_metrics"]["uniformity_cv"]
         me_cv = me_result["final_metrics"]["uniformity_cv"]
 
-        # MMR should be at least comparable or better in uniformity
-        assert mmr_cv is not None
-        assert me_cv is not None
+        assert mmr_cv < me_cv, (
+            f"MMR-Elites uniformity CV ({mmr_cv:.3f}) should beat "
+            f"MAP-Elites ({me_cv:.3f}) at 20 DOF"
+        )

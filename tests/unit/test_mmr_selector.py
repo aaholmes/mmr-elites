@@ -12,7 +12,7 @@ import numpy as np
 import pytest
 
 try:
-    import mmr_elites_rs
+    from mmr_elites import mmr_elites_rs
 
     RUST_AVAILABLE = True
 except ImportError:
@@ -216,6 +216,50 @@ class TestMMRSelectorEdgeCases:
         # Top 5 by fitness should be selected
         expected = np.argsort(fitness)[-5:][::-1]
         np.testing.assert_array_equal(result, expected)
+
+    def test_empty_input(self):
+        """N=0 input returns an empty selection without crashing."""
+        if not RUST_AVAILABLE:
+            pytest.skip("Rust backend not available")
+
+        selector = mmr_elites_rs.MMRSelector(5, 0.5)
+        result = selector.select(np.array([]), np.empty((0, 3)))
+        assert len(result) == 0
+
+    def test_k_zero_returns_empty(self):
+        """target_k=0 must return zero indices, not the fitness seed."""
+        if not RUST_AVAILABLE:
+            pytest.skip("Rust backend not available")
+
+        selector = mmr_elites_rs.MMRSelector(0, 0.5)
+        result = selector.select(np.array([0.1, 0.9, 0.5]), np.random.rand(3, 2))
+        assert len(result) == 0
+
+    def test_invalid_lambda_rejected(self):
+        """Lambda outside [0, 1] breaks the lazy-greedy invariant and is rejected."""
+        if not RUST_AVAILABLE:
+            pytest.skip("Rust backend not available")
+
+        with pytest.raises(ValueError):
+            mmr_elites_rs.MMRSelector(10, -0.1)
+        with pytest.raises(ValueError):
+            mmr_elites_rs.MMRSelector(10, 1.5)
+
+    def test_nan_input_rejected(self):
+        """Non-finite fitness or descriptors raise instead of corrupting selection."""
+        if not RUST_AVAILABLE:
+            pytest.skip("Rust backend not available")
+
+        selector = mmr_elites_rs.MMRSelector(2, 0.5)
+        fitness = np.array([0.5, np.nan, 0.7, 0.1])
+        descriptors = np.random.rand(4, 2)
+        with pytest.raises(ValueError):
+            selector.select(fitness, descriptors)
+
+        fitness = np.random.rand(4)
+        descriptors[1, 0] = np.inf
+        with pytest.raises(ValueError):
+            selector.select(fitness, descriptors)
 
 
 @pytest.mark.rust

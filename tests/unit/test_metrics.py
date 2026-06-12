@@ -132,9 +132,29 @@ class TestArchiveUniformity:
         assert cv > 0.4  # High CV = non-uniform
 
     def test_insufficient_points(self):
-        """When n <= k, returns 0."""
+        """When n <= k, uniformity is undefined and reported as NaN."""
         descriptors = np.random.randn(3, 5)
-        assert archive_uniformity(descriptors, k=5) == 0.0
+        assert np.isnan(archive_uniformity(descriptors, k=5))
+
+    def test_coverage_direct(self):
+        """archive_coverage returns a ratio for low-D and a raw count for high-D."""
+        from mmr_elites.metrics.qd_metrics import archive_coverage
+
+        np.random.seed(42)
+        bounds_min, bounds_max = np.zeros(2), np.ones(2)
+        desc_2d = np.random.rand(50, 2)
+        ratio = archive_coverage(desc_2d, bounds_min, bounds_max, grid_resolution=10)
+        assert 0.0 <= ratio <= 1.0
+
+        # 10-D: returns the raw unique-cell count, which can exceed 1
+        desc_10d = np.random.rand(50, 10)
+        count = archive_coverage(
+            desc_10d, np.zeros(10), np.ones(10), grid_resolution=10
+        )
+        assert count == 50  # 50 random points land in 50 distinct cells
+
+        # Empty archive
+        assert archive_coverage(np.empty((0, 2)), bounds_min, bounds_max) == 0.0
 
 
 class TestComputeAllMetrics:
@@ -159,7 +179,6 @@ class TestComputeAllMetrics:
             "coverage",
             "mean_fitness_at_budget",
         }
-        # Note: I changed coverage_efficiency to coverage in my implementation for consistency with old code
         assert set(metrics.keys()) == expected_keys
 
     def test_values_consistent(self):

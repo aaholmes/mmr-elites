@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 from click.testing import CliRunner
 
-from mmr_elites.cli import create_demo_scaffold, main
+from mmr_elites.cli import main
 
 
 @pytest.fixture
@@ -191,6 +191,37 @@ class TestRunCommand:
             )
             assert result.exit_code == 0, result.output
 
+    def test_run_flags_reach_the_algorithm(self, runner, mock_result):
+        """CLI options must propagate to the algorithm call, not just parse."""
+        with patch(
+            "mmr_elites.algorithms.run_mmr_elites", return_value=mock_result
+        ) as mock_fn:
+            result = runner.invoke(
+                main,
+                [
+                    "run",
+                    "--algorithm",
+                    "mmr_elites",
+                    "--generations",
+                    "10",
+                    "--archive-size",
+                    "50",
+                    "--batch-size",
+                    "20",
+                    "--lambda-val",
+                    "0.7",
+                    "--seed",
+                    "123",
+                ],
+            )
+            assert result.exit_code == 0, result.output
+            kwargs = mock_fn.call_args.kwargs
+            assert kwargs["generations"] == 10
+            assert kwargs["archive_size"] == 50
+            assert kwargs["batch_size"] == 20
+            assert kwargs["lambda_val"] == 0.7
+            assert kwargs["seed"] == 123
+
 
 class TestBenchmarkCommand:
     def test_benchmark_quick(self, runner, mock_result):
@@ -216,18 +247,23 @@ class TestBenchmarkCommand:
 
     def test_benchmark_error_handling(self, runner):
         """Test that benchmark handles algorithm errors gracefully."""
-        with patch(
-            "mmr_elites.algorithms.run_mmr_elites",
-            side_effect=RuntimeError("test error"),
-        ), patch(
-            "mmr_elites.algorithms.run_map_elites",
-            side_effect=RuntimeError("test error"),
-        ), patch(
-            "mmr_elites.algorithms.run_cvt_map_elites",
-            side_effect=RuntimeError("test error"),
-        ), patch(
-            "mmr_elites.algorithms.run_random_search",
-            side_effect=RuntimeError("test error"),
+        with (
+            patch(
+                "mmr_elites.algorithms.run_mmr_elites",
+                side_effect=RuntimeError("test error"),
+            ),
+            patch(
+                "mmr_elites.algorithms.run_map_elites",
+                side_effect=RuntimeError("test error"),
+            ),
+            patch(
+                "mmr_elites.algorithms.run_cvt_map_elites",
+                side_effect=RuntimeError("test error"),
+            ),
+            patch(
+                "mmr_elites.algorithms.run_random_search",
+                side_effect=RuntimeError("test error"),
+            ),
         ):
             with tempfile.TemporaryDirectory() as tmpdir:
                 result = runner.invoke(
@@ -266,15 +302,17 @@ class TestDemoCommand:
             assert "9000" in call_args
 
 
-class TestCreateDemoScaffold:
-    def test_creates_demo_files(self):
-        with tempfile.TemporaryDirectory() as tmpdir:
-            # Patch Path(__file__) to use temp dir
-            mock_path = MagicMock()
-            mock_path.parent.parent = Path(tmpdir)
-            with patch("mmr_elites.cli.Path", return_value=mock_path) as MockPath:
-                MockPath.return_value.parent.parent = Path(tmpdir)
-                create_demo_scaffold()
-                demo_dir = Path(tmpdir) / "demo"
-                assert demo_dir.exists()
-                assert (demo_dir / "app.py").exists()
+class TestDemoMissingApp:
+    def test_demo_errors_cleanly_when_app_missing(self):
+        """demo must error (not write into site-packages) if app.py is absent."""
+        from click.testing import CliRunner
+
+        runner = CliRunner()
+        with patch("mmr_elites.cli.Path") as MockPath:
+            mock_demo = MagicMock()
+            mock_demo.exists.return_value = False
+            MockPath.return_value.parent.parent.__truediv__.return_value = mock_demo
+            mock_demo.__truediv__.return_value = mock_demo
+            result = runner.invoke(main, ["demo"])
+            assert result.exit_code != 0
+            assert "Demo app not found" in result.output
