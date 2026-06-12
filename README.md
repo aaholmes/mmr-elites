@@ -73,16 +73,16 @@ The Rust implementation is roughly an order of magnitude faster than a vectorize
 
 ## 📊 QD Benchmark Results
 
-MMR-Elites achieves **12x better uniformity** than MAP-Elites and **6x better than CVT-MAP-Elites** on a 20-DOF arm reaching task:
+MMR-Elites achieves **~8x better uniformity** than both MAP-Elites and CVT-MAP-Elites on a 20-DOF arm reaching task (10 seeds, 2,000 generations, K = 1,000, λ = 0.5):
 
-| Algorithm | QD-Score* | Uniformity (CV↓) | Archive Size |
-|-----------|-----------|------------------|--------------|
-| **MMR-Elites** | 552.3 ± 0.2 | **0.066** | 1,000 |
-| CVT-MAP-Elites | 497.6 ± 0.9 | 0.417 | 758 |
-| MAP-Elites | 7468.6 ± 34.1 | 0.832 | 22,825 |
-| Random | 583.0 ± 1.2 | 0.789 | 1,000 |
+| Algorithm | QD-Score@K* | Uniformity (CV↓) | Archive Size |
+|-----------|------------|------------------|--------------|
+| **MMR-Elites** | 663.7 ± 2.1 | **0.059 ± 0.002** | 1,000 |
+| MAP-Elites | 675.0 ± 5.0 | 0.455 ± 0.010 | 84,035 |
+| CVT-MAP-Elites | 634.9 ± 4.7 | 0.467 ± 0.029 | 913 |
+| Random (top-K) | 633.2 ± 0.9 | 0.068 ± 0.002 | 1,000 |
 
-*\*QD-Score sums fitness over the whole archive, so MAP-Elites' larger value reflects its unbounded 22,825-cell archive rather than a per-budget advantage; the fixed-K algorithms' scores are directly comparable to each other. Lower uniformity CV = more uniform coverage.*
+*\*QD-Score@K sums the top K = 1,000 fitness values, so algorithms with different archive sizes are compared at the same budget (MAP-Elites' raw whole-archive QD-Score is 31,057 over its 84k cells). Lower uniformity CV = more uniform coverage. MAP-Elites reaches slightly higher quality at the budget but with ~8x worse uniformity and an archive 84x over budget; fitness-only random search is uniform here because the 20-D descriptor space is far too large for K points to cluster, but it discovers no better solutions than its samples. Regenerate with `mmr-elites benchmark --full`.*
 
 ## 🚀 Quick Start
 
