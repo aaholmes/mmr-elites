@@ -36,6 +36,10 @@ Traditional Quality-Diversity (QD) algorithms like MAP-Elites discretize behavio
 - **Fast exact selection** via a lazy greedy algorithm (typically O(1) re-scoring per pick; worst case O(N·K))
 - **Scalable to high-D** behavior spaces where MAP-Elites becomes computationally expensive
 
+### Why diversity helps even pure optimization
+
+MMR-Elites is the *selection step* of an evolutionary algorithm: each generation, K survivors are chosen from the current archive plus new offspring. Comparing selection methods on quality alone is misleading — a fitness-only selector always looks best on that axis *within one generation*. The reason to spend part of the selection budget on diversity is long-run: diverse survivors are **stepping stones**. On deceptive landscapes (where the path to the global optimum passes through low-fitness regions), greedy selection converges to a local optimum, while a selector that preserves behaviorally distinct individuals keeps open the lineages that eventually beat it. This is the central insight behind MAP-Elites and quality-diversity optimization in general; λ makes the quality/diversity allocation explicit and tunable, and the right balance is the one that maximizes *final* performance after many generations, not per-generation quality. The `experiments/long_run_evolution.py` script tests exactly this on a deceptive variant of the arm task (target hidden behind an obstacle).
+
 ### The MMR Selection Criterion
 
 At each generation, we select K survivors from the pool of archive + offspring by iteratively choosing the solution that maximizes:
