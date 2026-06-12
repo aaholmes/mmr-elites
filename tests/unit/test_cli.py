@@ -285,34 +285,3 @@ class TestCompareCommand:
             )
             assert result.exit_code == 0, result.output
             mock_fn.assert_called_once()
-
-
-class TestDemoCommand:
-    def test_demo_with_existing_app(self, runner):
-        with patch("subprocess.run") as mock_run:
-            # demo/app.py exists in the repo
-            result = runner.invoke(main, ["demo"])
-            # subprocess.run will be called with streamlit
-            mock_run.assert_called_once()
-
-    def test_demo_custom_port(self, runner):
-        with patch("subprocess.run") as mock_run:
-            result = runner.invoke(main, ["demo", "--port", "9000"])
-            call_args = mock_run.call_args[0][0]
-            assert "9000" in call_args
-
-
-class TestDemoMissingApp:
-    def test_demo_errors_cleanly_when_app_missing(self):
-        """demo must error (not write into site-packages) if app.py is absent."""
-        from click.testing import CliRunner
-
-        runner = CliRunner()
-        with patch("mmr_elites.cli.Path") as MockPath:
-            mock_demo = MagicMock()
-            mock_demo.exists.return_value = False
-            MockPath.return_value.parent.parent.__truediv__.return_value = mock_demo
-            mock_demo.__truediv__.return_value = mock_demo
-            result = runner.invoke(main, ["demo"])
-            assert result.exit_code != 0
-            assert "Demo app not found" in result.output

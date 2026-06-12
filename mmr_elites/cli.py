@@ -5,8 +5,7 @@ MMR-Elites Command Line Interface.
 Usage:
     mmr-elites run --task arm --algorithm mmr_elites --generations 1000
     mmr-elites benchmark --quick
-    mmr-elites compare --dimensions 5 10 20 50
-    mmr-elites demo
+    mmr-elites compare -d 5 -d 10 -d 20 -d 50
 """
 
 import json
@@ -332,38 +331,6 @@ def compare(dimensions, seeds, generations, output):
         n_seeds=seeds,
         generations=generations,
         output_dir=output_path,
-    )
-
-
-@main.command()
-@click.option("--port", "-p", type=int, default=8501, help="Port for Streamlit server")
-def demo(port):
-    """Launch interactive demo (requires streamlit)."""
-    import subprocess
-    import sys
-
-    demo_path = Path(__file__).parent.parent / "demo" / "app.py"
-
-    if not demo_path.exists():
-        # Never write next to the installed package (that would be
-        # site-packages); the demo ships with the repository.
-        raise click.ClickException(
-            "Demo app not found. The demo lives in the repository's demo/ "
-            "directory: clone https://github.com/aaholmes/mmr-elites and run "
-            "'mmr-elites demo' from the repo root."
-        )
-
-    click.echo(f"Launching demo on port {port}...")
-    subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "streamlit",
-            "run",
-            str(demo_path),
-            "--server.port",
-            str(port),
-        ]
     )
 
 
