@@ -21,14 +21,10 @@ WORKDIR /app
 # Copy project files
 COPY . .
 
-# Install Python dependencies
-RUN pip install --no-cache-dir maturin numpy scipy matplotlib scikit-learn click gymnasium
-
-# Build Rust extension
-RUN maturin develop --release
-
-# Install package
-RUN pip install -e .
+# Build and install the package; the maturin build backend compiles the
+# Rust extension during pip install (maturin develop would fail here
+# because it requires a virtualenv).
+RUN pip install --no-cache-dir .
 
 # Default command
 CMD ["mmr-elites", "--help"]

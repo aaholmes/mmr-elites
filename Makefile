@@ -9,10 +9,10 @@ build:
 
 # Testing
 test:
-	PYTHONPATH=. pytest tests/ -v
+	pytest tests/ -v
 
 test-cov:
-	PYTHONPATH=. pytest tests/ --cov=mmr_elites --cov=examples --cov-report=html --cov-report=term-missing
+	pytest tests/ --cov=mmr_elites --cov=examples --cov-report=html --cov-report=term-missing
 	@echo "Coverage report: htmlcov/index.html"
 
 # Code quality
@@ -37,9 +37,13 @@ benchmark-full:
 # Cleanup
 clean:
 	rm -rf build/ dist/ *.egg-info/ .pytest_cache/ htmlcov/
-	rm -rf results/
 	find . -name "*.pyc" -delete
 	find . -name "__pycache__" -delete
+
+# Deleting experiment outputs is intentionally a separate, explicit target:
+# results can take hours to regenerate.
+clean-results:
+	rm -rf results/
 
 # Docker
 docker-build:

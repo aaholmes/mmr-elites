@@ -6,7 +6,19 @@ build-backend = "maturin"
 name = "mmr-elites"
 version = "0.1.0"
 description = "Quality-Diversity as Information Retrieval: Overcoming the Curse of Dimensionality with Maximum Marginal Relevance Selection of Elites (MMR-Elites)"
-requires-python = ">=3.8"
+readme = "README.md"
+license = "MIT"
+authors = [{ name = "Adam Holmes", email = "adamaholmes@gmail.com" }]
+requires-python = ">=3.9"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Rust",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
 dependencies = [
     "numpy>=1.20,<3.0",
     "scipy>=1.7,<2.0",
@@ -15,6 +27,9 @@ dependencies = [
     "gymnasium>=0.26",
     "click>=8.0,<9.0",
 ]
+
+[project.urls]
+Repository = "https://github.com/aaholmes/mmr-elites"
 
 [project.optional-dependencies]
 dev = [
@@ -36,11 +51,14 @@ examples = [
 mmr-elites = "mmr_elites.cli:main"
 
 [tool.black]
-target-version = ["py38"]
+target-version = ["py39"]
 
 [tool.isort]
 profile = "black"
 
+# Mixed Rust/Python layout: the compiled extension lives inside the
+# mmr_elites package so wheels contain both the Python package and the
+# Rust module (a bare top-level module-name would ship the extension only).
 [tool.maturin]
 features = ["pyo3/extension-module"]
-module-name = "mmr_elites_rs"
+module-name = "mmr_elites.mmr_elites_rs"

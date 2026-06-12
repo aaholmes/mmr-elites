@@ -9,7 +9,7 @@ import pytest
 
 # Try to import Rust backend
 try:
-    import mmr_elites_rs
+    from mmr_elites import mmr_elites_rs
 
     RUST_AVAILABLE = True
 except ImportError:
