@@ -41,11 +41,16 @@ def wilcoxon_signed_rank_test(
     Returns:
         (statistic, p_value)
     """
-    try:
-        stat, p = stats.wilcoxon(x, y, alternative=alternative)
-    except ValueError:
-        # All differences are zero — no evidence of a difference
+    x = np.asarray(x, dtype=float)
+    y = np.asarray(y, dtype=float)
+    if x.shape != y.shape:
+        raise ValueError("paired samples must have the same shape")
+    if np.allclose(x - y, 0.0):
+        # All differences are zero — no evidence of a difference.
+        # (scipy raises here; any other ValueError is a real input error
+        # and must propagate rather than masquerade as p=1.)
         return 0.0, 1.0
+    stat, p = stats.wilcoxon(x, y, alternative=alternative)
     return float(stat), float(p)
 
 
@@ -113,8 +118,12 @@ def compute_all_statistics(
                 if hasattr(r, "final_metrics")
                 else r.get("final_metrics", {})
             )
-            val = metrics.get(metric, metrics.get("qd_score", 0))
-            vals.append(val)
+            if metric not in metrics:
+                raise KeyError(
+                    f"Metric '{metric}' missing from a result for '{alg}'; "
+                    "refusing to silently substitute a different metric"
+                )
+            vals.append(metrics[metric])
         values[alg] = np.array(vals)
 
     # Compute summary stats for each algorithm
@@ -132,7 +141,10 @@ def compute_all_statistics(
             "n": len(vals),
         }
 
-    # Pairwise comparisons against baseline
+    # Pairwise comparisons against baseline. Runs are seed-paired, so use
+    # the paired Wilcoxon test (two-sided) when sample sizes match, falling
+    # back to unpaired Mann-Whitney otherwise. p-values are Holm-Bonferroni
+    # corrected across the family of comparisons.
     if baseline in values and len(values[baseline]) > 0:
         baseline_vals = values[baseline]
         comparisons = {}
@@ -141,25 +153,40 @@ def compute_all_statistics(
             if alg == baseline or len(vals) == 0:
                 continue
 
-            # Effect size
             d = cohens_d(vals, baseline_vals)
 
-            # Significance test (use Mann-Whitney for robustness)
-            try:
-                stat, p = mann_whitney_u_test(
-                    vals, baseline_vals, alternative="greater"
+            if len(vals) == len(baseline_vals):
+                test_name = "wilcoxon_paired"
+                stat, p = wilcoxon_signed_rank_test(
+                    vals, baseline_vals, alternative="two-sided"
                 )
-            except ValueError:  # If all values are identical
-                stat, p = 0.0, 1.0
+            else:
+                test_name = "mann_whitney"
+                try:
+                    stat, p = mann_whitney_u_test(
+                        vals, baseline_vals, alternative="two-sided"
+                    )
+                except ValueError:  # If all values are identical
+                    stat, p = 0.0, 1.0
 
             comparisons[alg] = {
                 "vs": baseline,
                 "cohens_d": d,
-                "mann_whitney_stat": stat,
+                "test": test_name,
+                "statistic": stat,
                 "p_value": p,
-                "significant_005": p < 0.05,
-                "significant_001": p < 0.01,
             }
+
+        # Holm-Bonferroni correction
+        m = len(comparisons)
+        ordered = sorted(comparisons.items(), key=lambda kv: kv[1]["p_value"])
+        running_max = 0.0
+        for rank, (alg, comp) in enumerate(ordered):
+            adjusted = min(1.0, (m - rank) * comp["p_value"])
+            running_max = max(running_max, adjusted)
+            comp["p_value_holm"] = running_max
+            comp["significant_005"] = running_max < 0.05
+            comp["significant_001"] = running_max < 0.01
 
         summary["_comparisons"] = comparisons
 

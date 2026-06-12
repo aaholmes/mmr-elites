@@ -44,7 +44,12 @@ class QDAlgorithm(ABC):
 
     @abstractmethod
     def step(self, task) -> Dict[str, float]:
-        """Perform one generation step. Returns metrics."""
+        """Perform one generation step.
+
+        May return a lightweight info dict; full QD metrics are computed by
+        run() from get_archive() only on logging generations, since the
+        metric suite is O(N^2) in archive size.
+        """
         pass
 
     @abstractmethod
@@ -69,12 +74,18 @@ class QDAlgorithm(ABC):
             "archive_size": [],
         }
 
+        from mmr_elites.metrics.qd_metrics import compute_all_metrics
+
         start_time = time.time()
 
         for gen in range(1, self.config.generations + 1):
-            metrics = self.step(task)
+            self.step(task)
 
+            # The metric suite costs O(N^2) in archive size, so compute it
+            # only on generations that are actually logged.
             if gen % self.config.log_interval == 0:
+                _, fit, desc = self.get_archive()
+                metrics = compute_all_metrics(fit, desc, self.config.archive_size)
                 history["generation"].append(gen)
                 for key in history:
                     if key != "generation" and key in metrics:
@@ -82,9 +93,6 @@ class QDAlgorithm(ABC):
 
         runtime = time.time() - start_time
         genomes, fitness, descriptors = self.get_archive()
-
-        # Final metrics
-        from mmr_elites.metrics.qd_metrics import compute_all_metrics
 
         final_metrics = compute_all_metrics(
             fitness, descriptors, self.config.archive_size

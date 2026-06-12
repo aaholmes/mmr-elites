@@ -17,9 +17,16 @@ from pathlib import Path
 import click
 import numpy as np
 
+try:
+    from importlib.metadata import version as _pkg_version
+
+    _VERSION = _pkg_version("mmr-elites")
+except Exception:  # package not installed (e.g. running from a checkout)
+    _VERSION = "unknown"
+
 
 @click.group()
-@click.version_option(version="0.1.0", prog_name="MMR-Elites")
+@click.version_option(version=_VERSION, prog_name="MMR-Elites")
 def main():
     """MMR-Elites: Quality-Diversity via Maximum Marginal Relevance."""
     pass
@@ -298,8 +305,19 @@ def benchmark(quick, full, seeds, generations, output):
     help="Output directory",
 )
 def compare(dimensions, seeds, generations, output):
-    """Run dimensionality scaling comparison."""
-    from experiments.dimensionality_scaling import run_dimensionality_scaling
+    """Run dimensionality scaling comparison.
+
+    Requires a repository checkout: the experiment scripts live in the
+    repo's experiments/ directory and are not part of the installed package.
+    """
+    try:
+        from experiments.dimensionality_scaling import run_dimensionality_scaling
+    except ImportError:
+        raise click.ClickException(
+            "The 'compare' command needs the experiments/ directory from the "
+            "repository. Clone https://github.com/aaholmes/mmr-elites and run "
+            "this command from the repo root."
+        )
 
     output_path = Path(output)
 
@@ -327,11 +345,15 @@ def demo(port):
     demo_path = Path(__file__).parent.parent / "demo" / "app.py"
 
     if not demo_path.exists():
-        click.echo("❌ Demo not found. Creating demo scaffold...")
-        create_demo_scaffold()
-        demo_path = Path(__file__).parent.parent / "demo" / "app.py"
+        # Never write next to the installed package (that would be
+        # site-packages); the demo ships with the repository.
+        raise click.ClickException(
+            "Demo app not found. The demo lives in the repository's demo/ "
+            "directory: clone https://github.com/aaholmes/mmr-elites and run "
+            "'mmr-elites demo' from the repo root."
+        )
 
-    click.echo(f"🚀 Launching demo on port {port}...")
+    click.echo(f"Launching demo on port {port}...")
     subprocess.run(
         [
             sys.executable,
@@ -343,25 +365,6 @@ def demo(port):
             str(port),
         ]
     )
-
-
-def create_demo_scaffold():
-    """Create the demo directory and files if they don't exist."""
-    demo_dir = Path(__file__).parent.parent / "demo"
-    demo_dir.mkdir(exist_ok=True)
-
-    app_content = '''"""
-MMR-Elites Interactive Demo
-"""
-import streamlit as st
-
-st.set_page_config(page_title="MMR-Elites Demo", layout="wide")
-st.title("🤖 MMR-Elites: Quality-Diversity via Maximum Marginal Relevance")
-st.markdown("Demo coming soon! Run `mmr-elites benchmark --quick` to test the algorithms.")
-'''
-
-    with open(demo_dir / "app.py", "w") as f:
-        f.write(app_content)
 
 
 if __name__ == "__main__":

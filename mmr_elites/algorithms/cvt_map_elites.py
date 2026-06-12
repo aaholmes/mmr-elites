@@ -90,7 +90,9 @@ class CVTMAPElites(QDAlgorithm):
 
         # Initialize with larger population
         init_size = self.config.batch_size * 5
-        init_pop = np.random.uniform(-np.pi, np.pi, (init_size, self.n_dof))
+        init_pop = np.random.uniform(
+            *getattr(task, "genome_bounds", (-np.pi, np.pi)), (init_size, self.n_dof)
+        )
         fitness, descriptors = task.evaluate(init_pop)
 
         for i in range(init_size):
@@ -110,18 +112,15 @@ class CVTMAPElites(QDAlgorithm):
         offspring = parents + np.random.normal(
             0, self.config.mutation_sigma, parents.shape
         )
-        offspring = np.clip(offspring, -np.pi, np.pi)
+        offspring = np.clip(offspring, *getattr(task, "genome_bounds", (-np.pi, np.pi)))
 
         # Evaluate and add to archive
         fitness, descriptors = task.evaluate(offspring)
         for i in range(len(offspring)):
             self._add_to_archive(offspring[i], fitness[i], descriptors[i])
 
-        # Compute metrics
-        all_fit, all_desc = self._get_archive_arrays()
-        from mmr_elites.metrics.qd_metrics import compute_all_metrics
-
-        return compute_all_metrics(all_fit, all_desc, self.config.archive_size)
+        # Metrics are computed by QDAlgorithm.run on logging generations
+        return {}
 
     def _get_archive_arrays(self) -> Tuple[np.ndarray, np.ndarray]:
         """Extract fitness and descriptors as arrays."""

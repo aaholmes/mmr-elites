@@ -1,8 +1,9 @@
 """
 Random Search baseline.
 
-Maintains archive of K best-diverse solutions without any selection pressure.
-Used to verify that algorithms actually improve over random.
+Elitist control baseline: keeps the top-K solutions by fitness from
+uniformly random sampling, with no diversity criterion. Used to verify
+that the QD algorithms improve over fitness-only random search.
 """
 
 import time
@@ -33,7 +34,8 @@ class RandomSearch(QDAlgorithm):
 
         # Generate initial population
         self.archive = np.random.uniform(
-            -np.pi, np.pi, (self.config.archive_size, self.n_dof)
+            *getattr(task, "genome_bounds", (-np.pi, np.pi)),
+            (self.config.archive_size, self.n_dof),
         )
         self.fitness, self.descriptors = task.evaluate(self.archive)
 
@@ -41,7 +43,8 @@ class RandomSearch(QDAlgorithm):
         """Generate random solutions and keep best K."""
         # Generate new random solutions
         new_solutions = np.random.uniform(
-            -np.pi, np.pi, (self.config.batch_size, self.n_dof)
+            *getattr(task, "genome_bounds", (-np.pi, np.pi)),
+            (self.config.batch_size, self.n_dof),
         )
         new_fit, new_desc = task.evaluate(new_solutions)
 
@@ -57,12 +60,8 @@ class RandomSearch(QDAlgorithm):
         self.fitness = pool_fit[top_k_idx]
         self.descriptors = pool_desc[top_k_idx]
 
-        # Compute metrics
-        from mmr_elites.metrics.qd_metrics import compute_all_metrics
-
-        return compute_all_metrics(
-            self.fitness, self.descriptors, self.config.archive_size
-        )
+        # Metrics are computed by QDAlgorithm.run on logging generations
+        return {}
 
     def get_archive(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Return current archive state."""

@@ -63,8 +63,15 @@ struct MMRSelector {
 #[pymethods]
 impl MMRSelector {
     #[new]
-    fn new(target_k: usize, lambda_val: f64) -> Self {
-        MMRSelector { target_k, lambda_val }
+    fn new(target_k: usize, lambda_val: f64) -> PyResult<Self> {
+        // Lambda outside [0, 1] silently breaks the lazy-greedy upper-bound
+        // invariant (scores must be non-increasing as the archive grows).
+        if !(0.0..=1.0).contains(&lambda_val) {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "lambda_val must be in [0, 1]",
+            ));
+        }
+        Ok(MMRSelector { target_k, lambda_val })
     }
 
     /// The High-Performance Selection Interface
@@ -85,6 +92,16 @@ impl MMRSelector {
             ));
         }
 
+        // NaN/inf scores violate the heap's total order and make the
+        // selection silently arbitrary, so reject them up front.
+        if fit_view.iter().any(|v| !v.is_finite())
+            || desc_view.iter().any(|v| !v.is_finite())
+        {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "fitness and descriptors must be finite (no NaN/inf)",
+            ));
+        }
+
         // Release GIL for expensive computation (Parallelism!)
         let indices = py.allow_threads(|| {
             self.run_optimized(fit_view, desc_view)
@@ -101,6 +118,9 @@ impl MMRSelector {
         descriptors: ArrayView2<f64>
     ) -> Vec<usize> {
         let n = fitness.len();
+        if self.target_k == 0 {
+            return Vec::new();
+        }
         if n <= self.target_k {
             return (0..n).collect();
         }
@@ -119,8 +139,7 @@ impl MMRSelector {
             vec![0.5; n]
         };
 
-        let mut selected_indices = Vec::with_capacity(self.target_k);
-        let mut archive_indices: Vec<usize> = Vec::with_capacity(self.target_k);
+        let mut selected_indices: Vec<usize> = Vec::with_capacity(self.target_k);
 
         // 1. Seed with Best Fitness (Serial is fine for O(N))
         let mut best_idx = 0;
@@ -134,7 +153,6 @@ impl MMRSelector {
         }
 
         selected_indices.push(best_idx);
-        archive_indices.push(best_idx);
 
         // 2. Parallel Initialization (Rayon)
         let seed_desc = descriptors.row(best_idx);
@@ -173,7 +191,7 @@ impl MMRSelector {
         while selected_indices.len() < self.target_k {
             if let Some(mut top) = pq.pop() {
                 
-                let current_archive_len = archive_indices.len();
+                let current_archive_len = selected_indices.len();
                 
                 // CHECK: Is this candidate stale?
                 if top.checked_count < current_archive_len {
@@ -184,7 +202,7 @@ impl MMRSelector {
 
                     // OPTIMIZATION: Only scan the NEW elites added since we last checked
                     for i in top.checked_count..current_archive_len {
-                        let elite_idx = archive_indices[i];
+                        let elite_idx = selected_indices[i];
                         let elite_desc = descriptors.row(elite_idx);
 
                         let d = cand_desc.iter()
@@ -211,7 +229,6 @@ impl MMRSelector {
                     if new_score >= threshold {
                         // Winner
                         selected_indices.push(cand_idx);
-                        archive_indices.push(cand_idx);
                     } else {
                         // Stale: Push back with updated score
                         pq.push(top);
@@ -220,7 +237,6 @@ impl MMRSelector {
                 } else {
                     // Candidate is fresh, wins immediately
                     selected_indices.push(top.index);
-                    archive_indices.push(top.index);
                 }
             } else {
                 break;
@@ -244,8 +260,17 @@ mod tests {
     use numpy::ndarray::{arr1, arr2};
 
     #[test]
+    fn test_target_k_zero_returns_empty() {
+        let selector = MMRSelector { target_k: 0, lambda_val: 0.5 };
+        let fitness = arr1(&[0.1, 0.9, 0.5]);
+        let descriptors = arr2(&[[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]]);
+        let indices = selector.run_optimized(fitness.view(), descriptors.view());
+        assert!(indices.is_empty());
+    }
+
+    #[test]
     fn test_small_logic_preserved() {
-        let selector = MMRSelector::new(2, 0.5);
+        let selector = MMRSelector { target_k: 2, lambda_val: 0.5 };
         let fitness = arr1(&[1.0, 0.5, 0.5]);
         let descriptors = arr2(&[
             [0.0, 0.0],

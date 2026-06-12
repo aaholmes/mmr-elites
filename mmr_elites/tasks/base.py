@@ -33,6 +33,15 @@ class Task(ABC):
         raise NotImplementedError
 
     @property
+    def genome_bounds(self) -> Tuple[float, float]:
+        """(low, high) bounds of the genome search domain.
+
+        Algorithms use these for initialization and mutation clipping.
+        Defaults to (-pi, pi), the planar-arm joint-angle domain.
+        """
+        return (-np.pi, np.pi)
+
+    @property
     def desc_dim(self) -> int:
         """Dimensionality of the behavior descriptor."""
         raise NotImplementedError

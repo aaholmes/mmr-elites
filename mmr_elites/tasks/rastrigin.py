@@ -18,7 +18,10 @@ class RastriginTask(Task):
     def __init__(self, n_dim: int = 10, A: float = 10.0):
         self.n_dim = n_dim
         self.A = A
-        self.genome_bounds = [(-5.12, 5.12)] * n_dim
+
+    @property
+    def genome_bounds(self) -> Tuple[float, float]:
+        return (-5.12, 5.12)
 
     @property
     def genome_dim(self) -> int:
@@ -29,10 +32,9 @@ class RastriginTask(Task):
         return self.n_dim
 
     def evaluate(self, genomes: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        # Map genomes from [-pi, pi] to [-5.12, 5.12]
-        # Assuming input is in range [-pi, pi] from evolution loop
-        scale = 5.12 / np.pi
-        x = genomes * scale
+        # Genomes live directly in the Rastrigin domain [-5.12, 5.12],
+        # declared via genome_bounds and respected by the evolution loop.
+        x = genomes
 
         # Rastrigin function
         n = self.n_dim

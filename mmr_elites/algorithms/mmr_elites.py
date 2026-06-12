@@ -11,7 +11,7 @@ import numpy as np
 from .base import ExperimentConfig, QDAlgorithm, QDResult
 
 try:
-    import mmr_elites_rs
+    from mmr_elites import mmr_elites_rs
 
     RUST_AVAILABLE = True
 except ImportError:
@@ -27,7 +27,9 @@ class MMRElites(QDAlgorithm):
 
     Properties:
         - Fixed archive size K
-        - O(K log K) selection via lazy greedy
+        - Exact greedy MMR selection via a lazy priority queue
+          (empirically fast: candidates are re-scored only 2-5 times on
+          average; worst case O(N*K) distance evaluations)
         - Explicit diversity optimization
     """
 
@@ -44,22 +46,22 @@ class MMRElites(QDAlgorithm):
         self.n_dof = None
 
     def initialize(self, task, seed: int):
-        """Initialize archive with random solutions."""
+        """Initialize archive by MMR-selecting K from an oversampled pool."""
         np.random.seed(seed)
 
         self.n_dof = getattr(task, "n_dof", getattr(task, "n_dim", 20))
+        lo, hi = getattr(task, "genome_bounds", (-np.pi, np.pi))
 
-        # Random initial population
-        self.archive = np.random.uniform(
-            -np.pi, np.pi, (self.config.archive_size, self.n_dof)
-        )
-        self.fitness, self.descriptors = task.evaluate(self.archive)
+        # Oversample so the initial MMR selection actually filters
+        # (selecting K from a pool of exactly K would be a no-op).
+        init_size = self.config.archive_size + self.config.batch_size
+        pool = np.random.uniform(lo, hi, (init_size, self.n_dof))
+        pool_fit, pool_desc = task.evaluate(pool)
 
-        # Initial selection to get diverse starting set
-        idx = self.selector.select(self.fitness, self.descriptors)
-        self.archive = self.archive[idx]
-        self.fitness = self.fitness[idx]
-        self.descriptors = self.descriptors[idx]
+        idx = self.selector.select(pool_fit, pool_desc)
+        self.archive = pool[idx]
+        self.fitness = pool_fit[idx]
+        self.descriptors = pool_desc[idx]
 
     def step(self, task) -> Dict[str, float]:
         """Perform one generation."""
@@ -69,7 +71,8 @@ class MMRElites(QDAlgorithm):
         offspring = parents + np.random.normal(
             0, self.config.mutation_sigma, (self.config.batch_size, self.n_dof)
         )
-        offspring = np.clip(offspring, -np.pi, np.pi)
+        lo, hi = getattr(task, "genome_bounds", (-np.pi, np.pi))
+        offspring = np.clip(offspring, lo, hi)
 
         # Evaluation
         off_fit, off_desc = task.evaluate(offspring)
@@ -85,12 +88,8 @@ class MMRElites(QDAlgorithm):
         self.fitness = pool_fit[survivor_idx]
         self.descriptors = pool_desc[survivor_idx]
 
-        # Compute metrics
-        from mmr_elites.metrics.qd_metrics import compute_all_metrics
-
-        return compute_all_metrics(
-            self.fitness, self.descriptors, self.config.archive_size
-        )
+        # Metrics are computed by QDAlgorithm.run on logging generations
+        return {}
 
     def get_archive(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Return current archive state."""
